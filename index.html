@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RelayFresh Control Room</title>
+  <meta name="description" content="Real-time dispatch for perishable surplus and fragile aid: splits batches across riders, kills ghost reservations, reroutes cargo mid-trip." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◐</span>
+      <div>
+        <h1>RelayFresh</h1>
+        <p>Last-mile control room for perishable aid</p>
+      </div>
+    </div>
+    <div class="clock-group">
+      <div class="clock" id="clock">T+00:00</div>
+      <button id="play" class="btn primary">▶ Start</button>
+      <label class="speed">Speed
+        <select id="speed">
+          <option value="1">1 min/s</option>
+          <option value="3" selected>3 min/s</option>
+          <option value="6">6 min/s</option>
+        </select>
+      </label>
+      <button id="reset" class="btn ghost">↺ Reset</button>
+    </div>
+  </header>
+
+  <section class="metrics" id="metrics" aria-live="polite"></section>
+
+  <main class="layout">
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <h2>Live city map</h2>
+        <div class="legend">
+          <span><i class="dot donor"></i>Donor</span>
+          <span><i class="dot shelter"></i>Receiving site</span>
+          <span><i class="dot fallback"></i>Fallback</span>
+          <span><i class="dot rider"></i>Rider</span>
+        </div>
+      </div>
+      <svg id="map" viewBox="-0.6 -0.6 11.2 11.2" role="img" aria-label="City map with donors, shelters and riders"></svg>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Riders</h2><span class="hint">Simulate failures →</span></div>
+      <div id="riders" class="list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Receiving sites</h2><span class="hint">Click a facility to toggle it</span></div>
+      <div id="sites" class="list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Surplus batches</h2></div>
+      <form id="batch-form" class="batch-form">
+        <select name="donorId" aria-label="Donor"></select>
+        <select name="category" aria-label="Category"></select>
+        <input name="qty" type="number" min="1" value="120" aria-label="Quantity" />
+        <input name="shelfMin" type="number" min="5" value="30" aria-label="Safe minutes" />
+        <button class="btn primary" type="submit">+ Post batch</button>
+        <small>qty · safe minutes left</small>
+      </form>
+      <div id="batches" class="list"></div>
+    </section>
+
+    <section class="panel log-panel">
+      <div class="panel-head"><h2>Decision log</h2><span class="hint">Every automated decision, explained</span></div>
+      <ol id="log" class="log"></ol>
+    </section>
+  </main>
+
+  <script type="module" src="src/ui.js"></script>
+</body>
+</html>

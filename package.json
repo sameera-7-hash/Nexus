@@ -1,0 +1,11 @@
+{
+  "name": "relayfresh",
+  "version": "1.0.0",
+  "description": "Real-time dispatch and safety enforcement for perishable surplus and fragile aid.",
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "test": "node --test tests/*.test.js"
+  },
+  "license": "MIT"
+}
