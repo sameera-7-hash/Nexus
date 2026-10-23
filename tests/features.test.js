@@ -174,3 +174,16 @@ test('actions reducer applies the same changes any tab would send', () => {
   assert.equal(s.batches.length, n);
   assert.doesNotThrow(() => JSON.parse(JSON.stringify(s)), 'state must survive localStorage');
 });
+
+test('a rider carrying food to a food station can be pre-booked for the next pickup', () => {
+  const s = empty();
+  for (const sh of s.shelters) sh.need = {};
+  const b = addBatch(s, { donorId: 'D1', category: 'canned', qty: 20 });
+  run(s, 15);
+  const t = activeTasks(s).find((x) => x.batchId === b.id && x.phase === 'to_dropoff');
+  assert.ok(t && site(s, t.shelterId).kind === 'station', 'expected cargo heading to a station');
+  for (const r of s.riders) if (r.id !== t.riderId) r.silent = true;
+  assert.doesNotThrow(() => addBatch(s, { donorId: 'D2', category: 'canned', qty: 10 }));
+  const r = s.riders.find((x) => x.id === t.riderId);
+  assert.ok(r.nextTaskId, 'the busy rider should be pre-booked');
+});

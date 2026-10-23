@@ -258,7 +258,7 @@ function candidateRiders(s, b) {
     if (r.status === 'idle') { out.push({ r, from: r, freeAt: s.now, queued: false }); continue; }
     const cur = r.taskId && s.tasks.find((t) => t.id === r.taskId);
     if (r.status === 'busy' && cur && cur.phase === 'to_dropoff' && !r.nextTaskId) {
-      const sh = s.shelters.find((x) => x.id === cur.shelterId);
+      const sh = site(s, cur.shelterId);
       out.push({ r, from: sh, freeAt: Math.max(s.now, cur.eta), queued: true });
     }
   }

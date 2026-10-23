@@ -76,7 +76,7 @@ function step() {
     let simDt = (state.sim.speed * Math.max(elapsed, TICK_MS)) / 1000;
     while (simDt > 1e-6) {
       const dt = Math.min(simDt, MAX_STEP_MIN);
-      applyAction(state, { type: 'tick', dt });
+      if (!safeApply({ type: 'tick', dt })) { state.sim.running = false; break; }
       simDt -= dt;
     }
     if (now - lastBroadcast >= BROADCAST_MS) broadcast();
@@ -115,8 +115,19 @@ export function setLeadership(want) {
   if (!want && readJSON(LEADER_KEY)?.tab === tabId) { try { localStorage.removeItem(LEADER_KEY); } catch { /* ignore */ } }
 }
 
+// Apply on a copy so an engine error can never leave the shared state half-updated mid-demo.
+function safeApply(action) {
+  try {
+    state = applyAction(structuredClone(state), action);
+    return true;
+  } catch (err) {
+    console.error(`RelayFresh: action "${action.type}" failed and was rolled back`, err);
+    return false;
+  }
+}
+
 function commit(action) {
-  state = applyAction(state, action);
+  if (!safeApply(action)) return;
   persist();
   broadcast();
   emit();
