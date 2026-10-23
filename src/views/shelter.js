@@ -23,8 +23,8 @@ export function mount(root, ctx) {
   const sec = {
     home: () => `
       <div class="page-head"><div><span class="eyebrow">${icon('home')} Receiving site</span><h1>${esc(me.name)}</h1><p>Check in every day so riders know you are open. Keep your numbers current and food will find you.</p></div><div id="verify" class="verify"></div></div>
-      <section id="checkin" class="checkin" aria-live="polite"></section>
-      <div id="attention" class="attention" aria-live="polite"></div>
+      <section id="checkin" class="checkin" aria-label="Daily check-in"></section>
+      <div id="attention" class="attention"></div>
       <div class="split">
         <section class="panel"><div class="panel-head"><h2>${icon('bike')} Incoming</h2><a class="hint" href="#/shelter/incoming">Full timeline</a></div><div id="incoming"></div></section>
         <section class="panel"><div class="panel-head"><h2>${icon('users')} Today at a glance</h2></div><div id="glance"></div></section>

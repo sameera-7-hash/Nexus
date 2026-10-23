@@ -31,7 +31,7 @@ export function mount(root, ctx) {
         <div><span class="eyebrow">${icon('gift')} Donor</span><h1>${esc(me.name)}</h1><p>Post surplus the moment you know you have it. Every minute of safe time counts.</p></div>
         <a class="btn primary big" href="#/donor/post">${icon('plus')} Post surplus food</a>
       </div>
-      <section aria-labelledby="attn-h"><h2 id="attn-h" class="sr-only">Needs your attention</h2><div id="attention" class="attention" aria-live="polite"></div></section>
+      <section aria-labelledby="attn-h"><h2 id="attn-h" class="sr-only">Needs your attention</h2><div id="attention" class="attention"></div></section>
       <div class="split">
         <section class="panel"><div class="panel-head"><h2>${icon('list')} Live donations</h2><a href="#/donor/donations" class="hint">See all</a></div><div id="donations" class="list"><div class="skeleton"></div><div class="skeleton"></div></div></section>
         <section class="panel"><div class="panel-head"><h2>${icon('heart')} Your impact</h2></div><div id="impact"></div></section>

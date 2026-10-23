@@ -45,7 +45,7 @@ export function mount(root, ctx) {
           </div>
         </div>
       </div>
-      <section aria-label="Alerts"><div id="alerts" class="alerts-rail" aria-live="polite"></div></section>
+      <section aria-label="Alerts"><div id="alerts" class="alerts-rail"></div><p id="sr-alerts" class="sr-only" aria-live="assertive"></p></section>
       ${body(section)}
     </div>
     <dialog id="verify-dlg" class="panel" aria-labelledby="verify-h">
@@ -101,6 +101,7 @@ export function mount(root, ctx) {
   }
 
   let state;
+  let announced = null; // alert titles already shown; null until the first render
   let riderNodes = null;
   let focused = false;
   const repaintSelection = () => {
@@ -121,6 +122,11 @@ export function mount(root, ctx) {
       $('#play', root).innerHTML = s.sim.running ? '❚❚ Pause' : '▶ Start';
       root.querySelectorAll('[data-act=speed]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === s.sim.speed)));
       setHTML($('#alerts', root), alertsRail(s));
+      // Announce only alerts that are new, not every tick of a countdown.
+      const titles = alerts(s).map((a) => a.title);
+      const fresh = announced ? titles.filter((t) => !announced.has(t)) : [];
+      if (fresh.length) $('#sr-alerts', root).textContent = `New alert: ${fresh.join('. ')}`;
+      announced = new Set(titles);
       if ($('#kpis', root)) setHTML($('#kpis', root), kpis(s));
       if ($('#map', root)) riderNodes = renderMap(s, $('#map', root), riderNodes);
       if ($('#phone', root)) setHTML($('#phone', root), phone(s));
