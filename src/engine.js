@@ -1,4 +1,4 @@
-// RelayFresh dispatch engine — pure logic, no DOM. Time unit: simulated minutes. Distance unit: km.
+// NEXUS dispatch engine — pure logic, no DOM. Time unit: simulated minutes. Distance unit: km.
 
 // Perishability tiers decide where food may go:
 // TIGHT -> only confirmed, verified sites reachable in time (stations as last resort).

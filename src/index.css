@@ -1,0 +1,193 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* shadcn/ui tokens (warm neutral base, teal primary) plus NEXUS's food-safety and entity colours. */
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.983 0.003 85);
+  --foreground: oklch(0.2 0.006 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.006 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.006 60);
+  --primary: oklch(0.51 0.09 186);
+  --primary-foreground: oklch(0.985 0.01 180);
+  --secondary: oklch(0.961 0.004 85);
+  --secondary-foreground: oklch(0.25 0.006 60);
+  --muted: oklch(0.961 0.004 85);
+  --muted-foreground: oklch(0.5 0.012 70);
+  --accent: oklch(0.955 0.025 182);
+  --accent-foreground: oklch(0.38 0.075 186);
+  --destructive: oklch(0.55 0.21 27);
+  --border: oklch(0.912 0.007 80);
+  --input: oklch(0.89 0.008 80);
+  --ring: oklch(0.6 0.1 186);
+
+  /* Food safety: green safe, amber < 50 % of safe time left, red < 25 % or expired. */
+  --ok: oklch(0.55 0.15 150);
+  --warn: oklch(0.6 0.15 58);
+  --bad: oklch(0.56 0.21 27);
+  --info: oklch(0.52 0.19 262);
+  /* Map entities */
+  --donor: oklch(0.62 0.18 45);
+  --shelter: oklch(0.51 0.09 186);
+  --station: oklch(0.54 0.22 295);
+  --rider: oklch(0.55 0.2 262);
+  --map-bg: oklch(0.975 0.004 85);
+}
+
+.dark {
+  --background: oklch(0.155 0.004 60);
+  --foreground: oklch(0.96 0.004 85);
+  --card: oklch(0.195 0.005 60);
+  --card-foreground: oklch(0.96 0.004 85);
+  --popover: oklch(0.205 0.005 60);
+  --popover-foreground: oklch(0.96 0.004 85);
+  --primary: oklch(0.78 0.13 182);
+  --primary-foreground: oklch(0.22 0.04 186);
+  --secondary: oklch(0.255 0.006 60);
+  --secondary-foreground: oklch(0.96 0.004 85);
+  --muted: oklch(0.255 0.006 60);
+  --muted-foreground: oklch(0.7 0.012 75);
+  --accent: oklch(0.28 0.04 186);
+  --accent-foreground: oklch(0.85 0.1 182);
+  --destructive: oklch(0.68 0.19 25);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.7 0.11 182);
+
+  --ok: oklch(0.79 0.17 150);
+  --warn: oklch(0.83 0.15 80);
+  --bad: oklch(0.72 0.17 22);
+  --info: oklch(0.76 0.11 262);
+  --donor: oklch(0.76 0.15 52);
+  --shelter: oklch(0.78 0.13 182);
+  --station: oklch(0.75 0.13 295);
+  --rider: oklch(0.73 0.13 262);
+  --map-bg: oklch(0.175 0.005 60);
+}
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-info: var(--info);
+  --color-donor: var(--donor);
+  --color-shelter: var(--shelter);
+  --color-station: var(--station);
+  --color-rider: var(--rider);
+  --color-map: var(--map-bg);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+}
+
+/* ---------- Faint patterns ----------
+   Decorative layers sit absolutely behind content. They take their colour from `currentColor`
+   (set it with a text-* class) so they follow the theme; keep their opacity low. */
+.pattern-dots {
+  background-image: radial-gradient(currentColor 1px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+.pattern-grid {
+  background-image: linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+.pattern-topo {
+  background-color: currentColor;
+  mask: url("./assets/topo.svg") center / cover no-repeat;
+}
+.pattern-diagonal {
+  background-image: repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 11px);
+}
+/* Film grain: barely-there texture that keeps flat gradients from looking digital. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: .045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark .grain::after { opacity: .07; }
+.fade-b { mask-image: linear-gradient(to bottom, black, transparent); }
+.fade-r { mask-image: linear-gradient(to left, black 10%, transparent 80%); }
+.fade-radial { mask-image: radial-gradient(closest-side, black, transparent); }
+
+/* Hero preview cards drift gently. */
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-float-slow { animation: float 8s ease-in-out infinite; animation-delay: -3s; }
+
+/* ---------- Pieces Tailwind can't express cleanly ---------- */
+
+/* Countdown ring */
+.ring-track { stroke: var(--muted); }
+.ring-val { transition: stroke-dashoffset .6s linear, stroke .3s; }
+
+/* Live city map (SVG units are km on a 10 x 10 grid) */
+.map .grid { stroke: var(--border); stroke-width: .02; }
+.map .lbl { font: 600 .28px var(--font-sans); fill: var(--foreground); paint-order: stroke; stroke: var(--map-bg); stroke-width: .08px; }
+.map .lbl.small { font-size: .22px; font-weight: 500; fill: var(--muted-foreground); }
+.map .lbl.rider-lbl { font-size: .22px; }
+.map .park { fill: var(--ok); opacity: .08; }
+.map .river { fill: none; stroke: var(--info); stroke-width: .38; stroke-linecap: round; opacity: .11; }
+.map .road { fill: none; stroke: var(--muted-foreground); stroke-width: .12; stroke-linecap: round; opacity: .14; }
+.map .route { fill: none; }
+.map .route.pickup { stroke: var(--rider); stroke-width: .05; stroke-dasharray: .15 .12; opacity: .55; }
+.map .route.carry { stroke: var(--primary); stroke-width: .07; opacity: .85; }
+.map .route.reroute { stroke: var(--warn); stroke-width: .07; stroke-dasharray: .2 .1; }
+.map .rider { transition: transform .25s linear; cursor: pointer; }
+.map .rider circle { stroke: var(--card); stroke-width: .04; }
+.map .site.ghost circle { stroke-dasharray: .08 .06; }
+.map .sel { stroke: var(--ring); stroke-width: .05; fill: none; }
+
+/* Volunteer phone preview: always a light "device" screen, whatever the app theme. */
+.phone-ring .ring-track { stroke: #ece9e3; }
+
+@keyframes pulse-dot { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 55%, transparent); } 50% { box-shadow: 0 0 0 5px transparent; } }
+@keyframes glow { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--warn) 55%, transparent); } 50% { box-shadow: 0 0 0 10px transparent; } }
+@keyframes beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } }
+@keyframes flash { from { box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 40%, transparent); } to { box-shadow: none; } }
+.animate-pulse-dot { animation: pulse-dot 1.6s infinite; }
+.animate-glow { animation: glow 1.8s infinite; }
+.animate-beat { animation: beat 1.2s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

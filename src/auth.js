@@ -1,6 +1,6 @@
 // Demo auth: no backend, fixed accounts. The session is kept per tab (sessionStorage) so a donor tab
 // and a coordinator tab can sit side by side; localStorage remembers the last sign-in for new tabs.
-const SESSION_KEY = 'rf:session';
+const SESSION_KEY = 'nexus:session';
 
 export const ROLES = {
   donor:       { label: 'Donor',            home: '#/donor',       blurb: 'Banquet halls, hostel messes, pharmacies with surplus to give.' },
@@ -9,13 +9,13 @@ export const ROLES = {
 };
 
 export const ACCOUNTS = [
-  { email: 'banquet@relayfresh.demo',  role: 'donor',       name: 'Banquet Hall',    entityId: 'D1' },
-  { email: 'hostel@relayfresh.demo',   role: 'donor',       name: 'Hostel Mess',     entityId: 'D2' },
-  { email: 'pharmacy@relayfresh.demo', role: 'donor',       name: 'City Pharmacy',   entityId: 'D3' },
-  { email: 'sheltera@relayfresh.demo', role: 'shelter',     name: 'Shelter A',       entityId: 'S1' },
-  { email: 'campb@relayfresh.demo',    role: 'shelter',     name: 'Relief Camp B',   entityId: 'S2' },
-  { email: 'womenc@relayfresh.demo',   role: 'shelter',     name: 'Women & Child C', entityId: 'S3' },
-  { email: 'admin@relayfresh.demo',    role: 'coordinator', name: 'Control Room',    entityId: null },
+  { email: 'banquet@nexus.demo',  role: 'donor',       name: 'Banquet Hall',    entityId: 'D1' },
+  { email: 'hostel@nexus.demo',   role: 'donor',       name: 'Hostel Mess',     entityId: 'D2' },
+  { email: 'pharmacy@nexus.demo', role: 'donor',       name: 'City Pharmacy',   entityId: 'D3' },
+  { email: 'sheltera@nexus.demo', role: 'shelter',     name: 'Shelter A',       entityId: 'S1' },
+  { email: 'campb@nexus.demo',    role: 'shelter',     name: 'Relief Camp B',   entityId: 'S2' },
+  { email: 'womenc@nexus.demo',   role: 'shelter',     name: 'Women & Child C', entityId: 'S3' },
+  { email: 'admin@nexus.demo',    role: 'coordinator', name: 'Control Room',    entityId: null },
 ].map((a) => ({ ...a, password: 'demo' }));
 
 function read(store) {

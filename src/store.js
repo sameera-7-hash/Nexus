@@ -5,8 +5,8 @@
 //   still works with only a donor tab open (the clock just doesn't move).
 import { applyAction, freshState } from './actions.js';
 
-const STATE_KEY = 'rf:state:v3';
-const LEADER_KEY = 'rf:leader';
+const STATE_KEY = 'nexus:state:v3';
+const LEADER_KEY = 'nexus:leader';
 const LEADER_TTL = 3000;
 const TICK_MS = 100;
 const BROADCAST_MS = 200;
@@ -14,7 +14,7 @@ const PERSIST_MS = 1000;
 const MAX_STEP_MIN = 0.5; // largest single engine step, in simulated minutes
 
 const tabId = Math.random().toString(36).slice(2);
-const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('relayfresh') : null;
+const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('nexus') : null;
 const listeners = new Set();
 
 let state = null;
@@ -121,7 +121,7 @@ function safeApply(action) {
     state = applyAction(structuredClone(state), action);
     return true;
   } catch (err) {
-    console.error(`RelayFresh: action "${action.type}" failed and was rolled back`, err);
+    console.error(`NEXUS: action "${action.type}" failed and was rolled back`, err);
     return false;
   }
 }

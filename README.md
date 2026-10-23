@@ -1,18 +1,19 @@
-# RelayFresh: surplus food, delivered safe
+# NEXUS: Every Meal. Every Route. Every Life Matters.
 
-RelayFresh connects **food donors** (banquet halls, hostel messes, pharmacies) with **people in need** (night shelters, relief camps, individuals) through **volunteer riders**, live. It treats time, transport capacity, compatibility and human unreliability as live variables. It catches ghosts on both sides, riders who go silent and stations that stop checking in, and it never hands over food past its safe time.
+NEXUS connects **food donors** (banquet halls, hostel messes, pharmacies) with **people in need** (night shelters, relief camps, individuals) through **volunteer riders**, live. It treats time, transport capacity, compatibility and human unreliability as live variables. It catches ghosts on both sides, riders who go silent and stations that stop checking in, and it never hands over food past its safe time.
 
-Plain HTML, CSS and vanilla ES modules. No framework, no build step, no backend.
+React + [shadcn/ui](https://ui.shadcn.com) (Radix + Tailwind CSS v4) on Vite. No backend: the dispatch engine is plain JavaScript that runs in the browser.
 
 ## Run it
 
 ```bash
-npx serve .            # or: python -m http.server 8000
-# open http://localhost:3000 (or :8000)
+npm install
+npm run dev            # open http://localhost:5173
 npm test               # node:test, Node 18+
+npm run build          # static site in dist/
 ```
 
-It deploys to Vercel (or any static host) as is: no build command, output directory `.`.
+It deploys to Vercel (or any static host): build command `npm run build`, output directory `dist`.
 
 **Live demo across windows.** Open two browser windows. Sign in as a donor in one and as the coordinator in the other. Food the donor posts appears in the control room instantly. Tabs share state through `localStorage` and sync through `BroadcastChannel`. The coordinator tab owns the simulation clock; every other tab renders state and sends actions. Each tab keeps its own sign-in, so the roles can sit side by side.
 
@@ -20,13 +21,13 @@ It deploys to Vercel (or any static host) as is: no build command, output direct
 
 | Role | Email | Linked to |
 | --- | --- | --- |
-| Donor | `banquet@relayfresh.demo` | Banquet Hall |
-| Donor | `hostel@relayfresh.demo` | Hostel Mess |
-| Donor | `pharmacy@relayfresh.demo` | City Pharmacy |
-| Shelter | `sheltera@relayfresh.demo` | Shelter A |
-| Shelter | `campb@relayfresh.demo` | Relief Camp B |
-| Shelter | `womenc@relayfresh.demo` | Women & Child C |
-| Coordinator | `admin@relayfresh.demo` | Control room |
+| Donor | `banquet@nexus.demo` | Banquet Hall |
+| Donor | `hostel@nexus.demo` | Hostel Mess |
+| Donor | `pharmacy@nexus.demo` | City Pharmacy |
+| Shelter | `sheltera@nexus.demo` | Shelter A |
+| Shelter | `campb@nexus.demo` | Relief Camp B |
+| Shelter | `womenc@nexus.demo` | Women & Child C |
+| Coordinator | `admin@nexus.demo` | Control room |
 
 The login page pre-fills these, and the **Switch demo account** menu in the top bar jumps between roles. **`#/stations` is public**: anyone in need can find food without logging in.
 
@@ -69,22 +70,27 @@ Every automated decision goes to the **decision log** with its reason.
 ## Structure
 
 ```
-index.html            app shell (top bar, sidebar / bottom tabs, toasts)
-styles.css            design tokens, light + dark, components, responsive
+index.html            Vite entry, fonts, no-flash theme script
+src/main.jsx          boots the store and session, mounts <App />
+src/App.jsx           hash router, role guards, app shell
+src/index.css         shadcn theme tokens (light + dark) plus food-safety and map colours
 src/engine.js         dispatch + recovery engine (pure, no DOM)
 src/scenario.js       demo city: donors, sites, stations, riders, batches
 src/actions.js        one reducer for every change: (state, action) -> state
 src/store.js          cross-tab live state: localStorage + BroadcastChannel, clock leader
 src/auth.js           demo accounts and per-tab sessions
-src/app.js            hash router, role guards, shell, delegated events
-src/ui/               kit (icons, rings, toasts), derive (selectors), alerts (+ judge scenarios)
-src/views/            login, donor, shelter, coordinator, stations
+src/ui/               kit (formatting), derive (selectors), alerts (+ judge scenarios): pure, no DOM
+src/components/ui/    shadcn/ui components (button, card, select, dialog, dropdown-menu, sonner, …)
+src/components/app/   NEXUS pieces built on them: shell, safety rings, callouts, KPI tiles
+src/hooks/            useSim (live state), useRoute (hash router), useTheme
+src/views/            Login, Donor, Shelter, Coordinator, Stations
 tests/                node:test: 10 original scenarios + 16 for the new features
 ```
 
 ## Design notes
 
 - **Food-safety colours everywhere:** green = safe, amber = under 50% of safe time left, red = under 25% or expired.
+- shadcn/ui ("new-york" style) with a warm neutral base and a teal primary. Add more components with `npx shadcn@latest add <name>`. In this JS (non-TSX) project the CLI writes `import { cn } from "cn"` and installs an unrelated `cn` package, so afterwards run `sed -i 's|from "cn"|from "@/lib/utils"|' src/components/ui/*.jsx && npm uninstall cn`.
 - Inter for the UI, JetBrains Mono for timers and numbers. Fonts load non-blocking, so the app starts instantly on bad wifi.
 - Light and dark modes (system preference plus a toggle). Keyboard focus rings, labelled inputs, and a screen-reader announcer for new alerts. Animation respects `prefers-reduced-motion`.
 - Responsive down to 375 px. The sidebar becomes a bottom tab bar.
