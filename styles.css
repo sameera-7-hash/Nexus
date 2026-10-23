@@ -235,7 +235,11 @@ a.attn:hover { border-color: var(--muted); }
 
 /* Countdown ring */
 .ring { --size: 56px; position: relative; width: var(--size); height: var(--size); flex: none; display: inline-grid; place-items: center; }
-.ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ring > svg:not(.icon) { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ring > .icon { width: 24px; height: 24px; }
+.ring:has(> .icon) { border-radius: 50%; background: var(--surface-3); }
+.ring.ok > .icon { color: var(--ok); } .ring.warn > .icon { color: var(--warn); } .ring.bad > .icon { color: var(--bad); }
+.ring.ok:has(> .icon) { background: var(--ok-soft); } .ring.warn:has(> .icon) { background: var(--warn-soft); } .ring.bad:has(> .icon) { background: var(--bad-soft); }
 .ring circle { fill: none; stroke-width: 5; }
 .ring-track { stroke: var(--surface-3); }
 .ring-val { stroke: var(--ok); stroke-linecap: round; transition: stroke-dashoffset .6s linear, stroke .3s; }
@@ -307,7 +311,8 @@ body.bare .topbar .sim-status { display: none; }
 .public-link { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; align-self: flex-start; }
 
 /* ---------- Donor post flow ---------- */
-.stepper { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+.stepper { display: flex; gap: var(--sp-2); margin: 0 0 var(--sp-5); padding: 0; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .stepper li { flex: 1; list-style: none; display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--muted); padding-bottom: 8px; border-bottom: 3px solid var(--line); }
 .stepper li b { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--mono); background: var(--surface-3); }
 .stepper li.on { color: var(--accent); border-color: var(--accent); }
@@ -451,8 +456,11 @@ body.bare .topbar .sim-status { display: none; }
   .topbar { padding: 0 var(--sp-4); gap: var(--sp-2); }
   .brand-text small, .hide-sm { display: none; }
   .sim-status { margin-left: 0; }
-  .sim-status .pill { padding: 3px 8px; }
-  .switcher select { max-width: 112px; font-size: 12.5px; padding: 6px 6px; }
+  .sim-status .pill { font-size: 0; gap: 0; padding: 7px; }
+  .who { display: none; }
+  .top-actions, .account { min-width: 0; gap: 4px; }
+  .topbar .logo { width: 26px; height: 26px; }
+  .switcher select { max-width: 104px; min-width: 0; font-size: 12.5px; padding: 6px 4px; }
   .page { padding: var(--sp-4) var(--sp-4) var(--sp-6); gap: var(--sp-4); }
   .login { padding: var(--sp-5) var(--sp-4); gap: var(--sp-5); }
   .panel { padding: var(--sp-4); border-radius: var(--r-md); }

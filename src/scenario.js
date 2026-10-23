@@ -15,9 +15,9 @@ export const scenario = {
   ],
   // Public food stations: anyone can walk in. need = free shelf space per category; stock = on the shelves now.
   stations: [
-    { id: 'F1', name: 'Community Fridge',     x: 5.5, y: 4.5, helpline: '+91 98200 11001', hours: 'Open 24 h',      need: { meals: 150, medical: 40, dairy: 40, fruit: 30 }, stock: { dairy: 8, fruit: 6 }, has: { cold: true }, fallback: true },
-    { id: 'F2', name: 'Railway Food Station', x: 9.3, y: 4.8, helpline: '+91 98200 11002', hours: '6 am – 11 pm',   need: { meals: 60, bread: 80, fruit: 60, ration: 60, canned: 120, formula: 30 }, stock: { bread: 14, canned: 42, ration: 9 } },
-    { id: 'F3', name: 'Market Food Station',  x: 3.2, y: 9.3, helpline: '+91 98200 11003', hours: '7 am – 10 pm',   need: { meals: 60, bread: 80, fruit: 60, ration: 60, canned: 120, formula: 30 }, stock: { canned: 18, formula: 5 } },
+    { id: 'F1', name: 'Community Fridge',     x: 5.5, y: 4.5, helpline: '+91 00000 11001', hours: 'Open 24 h',      need: { meals: 150, medical: 40, dairy: 40, fruit: 30 }, stock: { dairy: 8, fruit: 6 }, has: { cold: true }, fallback: true },
+    { id: 'F2', name: 'Railway Food Station', x: 9.3, y: 4.8, helpline: '+91 00000 11002', hours: '6 am – 11 pm',   need: { meals: 60, bread: 80, fruit: 60, ration: 60, canned: 120, formula: 30 }, stock: { bread: 14, canned: 42, ration: 9 } },
+    { id: 'F3', name: 'Market Food Station',  x: 3.2, y: 9.3, helpline: '+91 00000 11003', hours: '7 am – 10 pm',   need: { meals: 60, bread: 80, fruit: 60, ration: 60, canned: 120, formula: 30 }, stock: { canned: 18, formula: 5 } },
   ],
   riders: [
     { id: 'R1', name: 'Asha',   x: 2.5, y: 3.0, vehicle: 'scooter' },
