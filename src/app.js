@@ -155,12 +155,12 @@ $('#theme').addEventListener('click', () => {
   applyTheme(theme);
 });
 
-// Coalesce updates to one render per frame. Background tabs get no animation frames, so use a timer there.
+// Coalesce bursts of updates into one render. A timer, not requestAnimationFrame: a frame requested just
+// before a tab goes to the background never fires, and that tab (often the coordinator) would freeze.
 let frame = 0;
 subscribe(() => {
   if (frame) return;
-  const draw = () => { frame = 0; mounted?.instance?.update?.(getState()); renderClock(); };
-  frame = document.hidden ? setTimeout(draw, 50) : requestAnimationFrame(draw);
+  frame = setTimeout(() => { frame = 0; mounted?.instance?.update?.(getState()); renderClock(); }, 16);
 });
 setInterval(renderClock, 1000);
 window.addEventListener('hashchange', route);

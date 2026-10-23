@@ -1,4 +1,4 @@
-import { RULES, FACILITY_LABEL, activeTasks, isCarrying } from '../engine.js';
+import { RULES, FACILITY_LABEL, activeTasks, isCarrying, site, sites as allSites } from '../engine.js';
 import { $, esc, byId, fmt, clock, setHTML } from '../ui/kit.js';
 
 export const nav = [{ id: 'ops', label: 'Live Ops', icon: 'map' }];
@@ -61,12 +61,12 @@ function map(s) {
   for (let i = 0; i <= 10; i++) parts.push(`<line x1="${i}" y1="0" x2="${i}" y2="10" class="grid"/><line x1="0" y1="${i}" x2="10" y2="${i}" class="grid"/>`);
   for (const t of activeTasks(s)) {
     const r = byId(s.riders, t.riderId); const b = byId(s.batches, t.batchId);
-    const d = byId(s.donors, b.donorId); const sh = byId(s.shelters, t.shelterId);
+    const d = byId(s.donors, b.donorId); const sh = site(s, t.shelterId);
     if (t.phase === 'to_pickup') parts.push(`<line x1="${r.x}" y1="${r.y}" x2="${d.x}" y2="${d.y}" class="route pickup"/>`);
     else parts.push(`<line x1="${r.x}" y1="${r.y}" x2="${sh.x}" y2="${sh.y}" class="route carry"/>`);
   }
   for (const d of s.donors) parts.push(`<rect x="${d.x - 0.22}" y="${d.y - 0.22}" width="0.44" height="0.44" rx="0.06" fill="var(--donor)"/><text x="${d.x}" y="${d.y - 0.36}" text-anchor="middle" class="lbl">${esc(d.name)}</text>`);
-  for (const sh of s.shelters) parts.push(`<circle cx="${sh.x}" cy="${sh.y}" r="0.28" fill="${sh.open ? 'var(--shelter)' : 'var(--bad)'}"/><text x="${sh.x}" y="${sh.y + 0.58}" text-anchor="middle" class="lbl">${esc(sh.name)}</text>`);
+  for (const sh of allSites(s)) parts.push(`<circle cx="${sh.x}" cy="${sh.y}" r="0.28" fill="${sh.open ? 'var(--shelter)' : 'var(--bad)'}"/><text x="${sh.x}" y="${sh.y + 0.58}" text-anchor="middle" class="lbl">${esc(sh.name)}</text>`);
   for (const r of s.riders) {
     const t = r.taskId && byId(s.tasks, r.taskId);
     const color = r.silent ? 'var(--bad)' : r.traffic ? 'var(--warn)' : 'var(--rider)';
@@ -87,7 +87,7 @@ function riders(s) {
 }
 
 function sites(s) {
-  return s.shelters.map((sh) => `
+  return allSites(s).map((sh) => `
     <div class="card ${sh.open ? '' : 'alert'}">
       <div class="row"><span class="name">${esc(sh.name)}</span><span class="chip ${sh.open ? 'idle' : 'closed'}">${sh.open ? 'open' : 'closed'}</span></div>
       <div class="needs">${Object.entries(sh.need).map(([c, v]) => `<span>${RULES[c].unit}: <b>${Math.max(0, v)}</b></span>`).join('')}</div>

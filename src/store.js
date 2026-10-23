@@ -5,12 +5,13 @@
 //   still works with only a donor tab open (the clock just doesn't move).
 import { applyAction, freshState } from './actions.js';
 
-const STATE_KEY = 'rf:state:v2';
+const STATE_KEY = 'rf:state:v3';
 const LEADER_KEY = 'rf:leader';
 const LEADER_TTL = 3000;
 const TICK_MS = 100;
 const BROADCAST_MS = 200;
 const PERSIST_MS = 1000;
+const MAX_STEP_MIN = 0.5; // largest single engine step, in simulated minutes
 
 const tabId = Math.random().toString(36).slice(2);
 const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('relayfresh') : null;
@@ -22,6 +23,7 @@ let wantLead = false;
 let loop = null;
 let lastBroadcast = 0;
 let lastPersist = 0;
+let lastStep = 0;
 
 function readJSON(key) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch { return null; }
@@ -65,9 +67,18 @@ function step() {
   if (!wantLead) return;
   if (leading) renewLeadership(now);
   else if (!leaderAlive()) leading = claimLeadership();
+  const elapsed = Math.min(5000, now - (lastStep || now));
+  lastStep = now;
   if (!leading) return;
   if (state.sim.running) {
-    applyAction(state, { type: 'tick', dt: (state.sim.speed * TICK_MS) / 1000 });
+    // Advance by real elapsed time (background tabs throttle timers to ~1/s), in small sub-steps so the
+    // engine sees the same granularity as a foreground tab.
+    let simDt = (state.sim.speed * Math.max(elapsed, TICK_MS)) / 1000;
+    while (simDt > 1e-6) {
+      const dt = Math.min(simDt, MAX_STEP_MIN);
+      applyAction(state, { type: 'tick', dt });
+      simDt -= dt;
+    }
     if (now - lastBroadcast >= BROADCAST_MS) broadcast();
     if (now - lastPersist >= PERSIST_MS) persist();
     emit();

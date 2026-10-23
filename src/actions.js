@@ -21,6 +21,13 @@ const HANDLERS = {
   walkIn: (s, { id }) => E.walkInFill(s, id),
   facility: (s, { id, facility }) => E.toggleFacility(s, id, facility),
   open: (s, { id }) => E.toggleOpen(s, id),
+  heartbeat: (s, { id }) => E.riderHeartbeat(s, id),
+  checkIn: (s, { id }) => E.checkIn(s, id),
+  ghost: (s, { id }) => E.goGhost(s, id),
+  verify: (s, { id, reason }) => E.verifySite(s, id, reason),
+  requestVerify: (s, { id }) => E.requestVerification(s, id),
+  updateSite: (s, { id, headcount, need }) => E.updateSite(s, id, { headcount, need }),
+  flood: (s, { ids }) => E.flashFlood(s, ids),
 };
 
 export function applyAction(s, action) {
