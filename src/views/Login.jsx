@@ -86,7 +86,7 @@ export default function LoginView({ ctx }) {
             Surplus food reaches people{' '}
             <span className="font-serif text-[1.12em] font-normal tracking-normal text-primary italic">before</span> it spoils.
           </h1>
-          <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+          <p className="max-w-2xl font-prose text-[17px] leading-relaxed text-muted-foreground sm:text-[19px]">
             NEXUS links food donors, volunteer riders and receiving sites in real time. It catches ghost riders and ghost stations,
             splits food fairly, and never hands over food past its safe time.
           </p>
@@ -94,11 +94,11 @@ export default function LoginView({ ctx }) {
             {STATS.map(([ic, t, x]) => (
               <span key={t} className="flex items-center gap-2 rounded-full border bg-card/70 py-1.5 pr-3.5 pl-1.5 text-[13px] shadow-xs backdrop-blur">
                 <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-primary"><Icon name={ic} className="size-3.5" /></span>
-                <b className="font-semibold">{t}</b><span className="text-muted-foreground max-sm:hidden">{x}</span>
+                <b className="font-semibold">{t}</b><span className="font-prose text-muted-foreground max-sm:hidden">{x}</span>
               </span>
             ))}
           </div>
-          <p className="flex items-start gap-2 rounded-lg border border-dashed bg-card/60 px-3.5 py-2.5 text-[13px] text-muted-foreground">
+          <p className="flex items-start gap-2 rounded-lg border border-dashed bg-card/60 px-3.5 py-2.5 font-prose text-[13.5px] text-muted-foreground">
             <Icon name="users" className="mt-0.5 size-4 shrink-0" />
             <span>Tip for judges: sign in as a donor in one window and the coordinator in another, then post food and watch it appear live.</span>
           </p>
@@ -112,7 +112,7 @@ export default function LoginView({ ctx }) {
         </section>
         <div>
           <h2 className="mb-1 text-2xl font-bold tracking-tight">Choose your <span className="font-serif text-[1.15em] font-normal text-primary italic">role</span></h2>
-          <p className="mb-5 text-sm text-muted-foreground">Demo accounts are pre-filled. Every password is “demo”.</p>
+          <p className="mb-5 font-prose text-[15px] text-muted-foreground">Demo accounts are pre-filled. Every password is “demo”.</p>
         <div className="grid gap-5 md:grid-cols-3">
           {Object.keys(ROLES).map((role) => <RoleCard key={role} role={role} ctx={ctx} />)}
         </div>

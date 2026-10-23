@@ -120,13 +120,13 @@ function Donations({ s, mine, limit }) {
                 <b className="font-semibold">{b.qty} {r.unit} · {r.label}</b>
                 <Tone level={st.level}>{st.label}</Tone>
               </div>
-              <p className="mt-0.5 text-[12.5px] text-foreground/80">{st.detail}</p>
+              <p className="mt-0.5 font-prose text-[13px] text-foreground/80">{st.detail}</p>
               <KV className="mt-1.5" items={[
                 ['Tier', TIERS[r.tier].label],
                 st.riders.length && ['Rider', st.riders.join(', ')],
                 ['Delivered', `${b.delivered ?? 0}/${b.qty}`],
               ]} />
-              {b.notes && <p className="mt-1 text-xs text-muted-foreground">Notes: {b.notes}</p>}
+              {b.notes && <p className="mt-1 font-prose text-xs text-muted-foreground">Notes: {b.notes}</p>}
             </div>
           </article>
         );
@@ -238,8 +238,8 @@ function PostFlow({ me, ctx }) {
 
           {step === 1 && (
             <fieldset>
-              <legend className="mb-3 text-sm text-muted-foreground">
-                Pick everything you have. <span className="font-semibold text-foreground">{selected.length} selected</span>
+              <legend className="mb-3 font-prose text-sm text-muted-foreground">
+                Pick everything you have. <span className="font-sans font-semibold text-foreground">{selected.length} selected</span>
               </legend>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2.5">
                 {Object.entries(RULES).map(([k, rule]) => (
@@ -293,7 +293,7 @@ function PostFlow({ me, ctx }) {
               <label className={cn('flex min-h-24 cursor-pointer items-center justify-center gap-3 rounded-lg border-2 border-dashed bg-muted/40 p-4 text-center text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary',
                 photo && 'border-solid border-ok/60 bg-ok/5 text-ok')}>
                 {photo ? <Check className="size-5" /> : <Camera className="size-5" />}
-                <span>{photo ? `Photo attached: ${photo}` : 'Add a photo (optional). It helps riders find the right boxes.'}</span>
+                <span className="font-prose">{photo ? `Photo attached: ${photo}` : 'Add a photo (optional). It helps riders find the right boxes.'}</span>
                 <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const n = e.target.files?.[0]?.name ?? ''; setPhoto(n); if (n) notify('Photo attached'); }} />
               </label>
               <div className="space-y-1.5">

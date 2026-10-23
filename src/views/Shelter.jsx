@@ -104,7 +104,7 @@ function CheckIn({ s, sh, ctx }) {
         <StatusDisc level={ci.level} icon={ci.key === 'ok' ? 'check' : 'clock'} />
         <div className="min-w-[220px] flex-1">
           <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold">{title}</h2><Tone level={ci.level}>{ci.label}</Tone></div>
-          <p className="text-sm text-muted-foreground">{text} Last check-in: <b className="font-mono text-foreground">{ago(ci.since)}</b>.</p>
+          <p className="font-prose text-sm text-muted-foreground">{text} Last check-in: <b className="font-mono text-foreground">{ago(ci.since)}</b>.</p>
         </div>
         <Button size="lg" className={cn('h-12 px-6 text-base', ci.key !== 'ok' && 'animate-glow')}
           onClick={() => ctx.act({ type: 'checkIn', id: sh.id }, 'Checked in. Riders can see you are open.')}>
@@ -150,8 +150,8 @@ function Timeline({ s, sh }) {
               <b className="font-semibold">{t.qty} {RULES[t.category].unit} · {RULES[t.category].label}</b>
               <Tone level={lvl}>ETA {Math.max(1, Math.round(t.eta - s.now))} min</Tone>
             </div>
-            <p className="text-[12.5px] text-muted-foreground">{rider.name} ({rider.vehicle}) · {phase} · food safe for <span className="font-mono tabular">{fmt(left)}</span></p>
-            {t.rerouted && <p className="text-[12.5px] text-warn">Rerouted here from {t.rerouted.from}: {t.rerouted.reason}</p>}
+            <p className="font-prose text-[12.5px] text-muted-foreground">{rider.name} ({rider.vehicle}) · {phase} · food safe for <span className="font-mono tabular">{fmt(left)}</span></p>
+            {t.rerouted && <p className="font-prose text-[12.5px] text-warn">Rerouted here from {t.rerouted.from}: {t.rerouted.reason}</p>}
           </li>
         );
       })}
@@ -174,7 +174,7 @@ function Glance({ s, sh }) {
       <div>
         <p className="mb-1.5 text-xs font-medium text-muted-foreground">Open needs</p>
         <div className="flex flex-wrap gap-1.5">
-          {needs.length ? needs.map(([c, v]) => <Tone key={c}>{v} {RULES[c].unit}</Tone>) : <span className="text-[12.5px] text-muted-foreground">No open needs. Update them if that changes.</span>}
+          {needs.length ? needs.map(([c, v]) => <Tone key={c}>{v} {RULES[c].unit}</Tone>) : <span className="font-prose text-[12.5px] text-muted-foreground">No open needs. Update them if that changes.</span>}
         </div>
       </div>
       <div>
@@ -231,7 +231,7 @@ function Facilities({ sh, ctx }) {
           <span className={cn('grid size-9 shrink-0 place-items-center rounded-full', sh.has[f] ? 'bg-info/10 text-info' : 'bg-muted text-muted-foreground')}><Icon name={WHY[f].icon} className="size-[18px]" /></span>
           <span className="min-w-0 flex-1">
             <b className="block text-sm font-semibold">{cap(FACILITY_LABEL[f])}</b>
-            <span className="block text-[12.5px] text-muted-foreground">{WHY[f].text}</span>
+            <span className="block font-prose text-[12.5px] text-muted-foreground">{WHY[f].text}</span>
           </span>
           <Switch id={`fac-${f}`} checked={!!sh.has[f]} aria-label={`${FACILITY_LABEL[f]} available`}
             onCheckedChange={(on) => ctx.act({ type: 'facility', id: sh.id, facility: f }, `${cap(FACILITY_LABEL[f])} marked ${on ? 'available' : 'unavailable'}`, on ? 'ok' : 'warn')} />

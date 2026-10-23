@@ -46,7 +46,7 @@ export function Empty({ icon, title, children, action }) {
     <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed bg-muted/20 px-4 py-8 text-center">
       <EmptyArt icon={icon} />
       <b className="text-sm font-semibold">{title}</b>
-      <p className="max-w-sm text-sm text-muted-foreground">{children}</p>
+      <p className="max-w-sm font-prose text-sm text-muted-foreground">{children}</p>
       {action && <div className="mt-2">{action}</div>}
     </div>
   );
@@ -65,7 +65,7 @@ export function Callout({ tone = 'info', icon, title, children, action, aside, c
       <span className={cn('grid size-9 shrink-0 place-items-center rounded-md border', TONE[tone])}><Icon name={icon} className="size-[18px]" /></span>
       <div className="min-w-0 flex-1">
         {title && <b className="block text-sm font-semibold">{title}</b>}
-        {children && <span className="block text-[13px] text-muted-foreground">{children}</span>}
+        {children && <span className="block font-prose text-[13px] text-muted-foreground">{children}</span>}
       </div>
       {aside}
       {action}
@@ -88,7 +88,7 @@ export function PageHeader({ eyebrow, icon, title, children, actions, plain = fa
           {icon && <Icon name={icon} className="size-3.5" />}{eyebrow}
         </Badge>
         <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-[28px]">{title}</h1>
-        {children && <p className="max-w-2xl text-muted-foreground">{children}</p>}
+        {children && <p className="max-w-2xl font-prose text-[15.5px] leading-relaxed text-muted-foreground">{children}</p>}
       </div>
       {actions && <div className="relative flex flex-wrap items-center gap-2">{actions}</div>}
     </div>

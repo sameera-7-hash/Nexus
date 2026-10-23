@@ -46,9 +46,9 @@ export function StationCards({ s, from, compact = false }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-[12.5px] text-muted-foreground">Shelves are empty right now. New stock is on the way. Call to check before you travel.</p>
+                <p className="font-prose text-[12.5px] text-muted-foreground">Shelves are empty right now. New stock is on the way. Call to check before you travel.</p>
               )}
-              {!compact && <p className="text-[12.5px] text-muted-foreground">Free for anyone. No ID or registration needed.</p>}
+              {!compact && <p className="font-prose text-[12.5px] text-muted-foreground">Free for anyone. No ID or registration needed.</p>}
               <Button asChild variant={st.open ? 'default' : 'outline'} className="mt-auto">
                 <a href={`tel:${tel}`}><Phone /> Call {st.helpline}</a>
               </Button>
@@ -93,12 +93,12 @@ export default function StationsView({ s, me }) {
         <CardContent className="flex flex-wrap items-center justify-between gap-4 px-6">
           <div>
             <h2 className="text-base font-semibold">City food helpline</h2>
-            <p className="text-sm text-muted-foreground">24 hours. We will tell you where food is available tonight. (Demo numbers throughout: they do not connect to a real line.)</p>
+            <p className="font-prose text-sm text-muted-foreground">24 hours. We will tell you where food is available tonight. (Demo numbers throughout: they do not connect to a real line.)</p>
           </div>
           <Button asChild size="lg"><a href="tel:+910000011000"><Phone /> Call +91 00000 11000</a></Button>
         </CardContent>
       </Card>
-      {!me && <p className="text-sm text-muted-foreground">Run a shelter or have food to give? <a className="font-medium text-primary underline-offset-4 hover:underline" href="#/login">Sign in</a>.</p>}
+      {!me && <p className="font-prose text-sm text-muted-foreground">Run a shelter or have food to give? <a className="font-medium text-primary underline-offset-4 hover:underline" href="#/login">Sign in</a>.</p>}
     </div>
   );
 }

@@ -82,7 +82,7 @@ export function Topbar({ s, me, bare, dark, onTheme, onSwitch, onLogout }) {
         <Logo />
         <span className="flex flex-col leading-tight max-[400px]:hidden">
           <b className="text-base font-bold tracking-tight">NEXUS</b>
-          <small className="text-[11px] text-muted-foreground max-sm:hidden">Every Meal. Every Route. Every Life Matters.</small>
+          <small className="font-prose text-[11.5px] text-muted-foreground italic max-sm:hidden">Every Meal. Every Route. Every Life Matters.</small>
         </span>
       </a>
       {!bare && s && <div className="sm:ml-2"><SimStatus s={s} /></div>}
@@ -124,10 +124,10 @@ export function SideNav({ page, nav, section, badges = {}, me }) {
           );
         })}
       </div>
-      <a href="#/stations" className="group grain relative mt-auto overflow-hidden rounded-xl border bg-gradient-to-br from-station/10 to-card p-3.5 text-xs text-muted-foreground transition-all hover:border-station/40 hover:shadow-md">
+      <a href="#/stations" className="group grain relative mt-auto overflow-hidden rounded-xl border bg-gradient-to-br from-station/10 to-card p-3.5 font-prose text-xs text-muted-foreground transition-all hover:border-station/40 hover:shadow-md">
         <Pattern kind="topo" className="text-station/[0.14]" />
         <span className="relative mb-2.5 grid size-9 place-items-center rounded-xl bg-card text-station shadow-sm ring-1 ring-border transition-transform group-hover:-rotate-6"><Store className="size-[18px]" /></span>
-        <span className="relative block"><b className="block text-[13px] font-semibold text-foreground">Public food stations</b>Anyone in need can find food here, no login.</span>
+        <span className="relative block"><b className="block font-sans text-[13px] font-semibold text-foreground">Public food stations</b>Anyone in need can find food here, no login.</span>
       </a>
     </nav>
   );

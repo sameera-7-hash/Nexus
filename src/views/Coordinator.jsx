@@ -155,7 +155,7 @@ function Controls({ s, ctx, onScenario }) {
         {SCENARIOS.map((x) => (
           <DropdownMenuItem key={x.id} onSelect={() => onScenario(x.id)} className="items-start gap-3 py-2">
             <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary"><Icon name={x.icon} className="size-4" /></span>
-            <span><b className="block text-[13px] font-semibold">{x.title}</b><span className="text-xs text-muted-foreground">{x.text}</span></span>
+            <span><b className="block text-[13px] font-semibold">{x.title}</b><span className="font-prose text-xs text-muted-foreground">{x.text}</span></span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -187,13 +187,13 @@ function AlertsRail({ s, onJump }) {
               <span className={cn('grid size-7 shrink-0 place-items-center rounded-md border', TONE[a.level === 'info' ? 'accent' : a.level])}><Icon name={a.icon} className="size-4" /></span>
               <span className="min-w-0">
                 <b className="block text-[12.5px] font-semibold">{a.title}</b>
-                <span className="line-clamp-2 text-xs text-muted-foreground">{a.text}</span>
+                <span className="line-clamp-2 font-prose text-xs text-muted-foreground">{a.text}</span>
               </span>
             </button>
           ))}
         </div>
       ) : (
-        <div className="flex items-center gap-2 rounded-lg border border-dashed border-ok/45 bg-ok/[0.04] px-3 py-2.5 text-[13px] font-medium text-ok">
+        <div className="flex items-center gap-2 rounded-lg border border-dashed border-ok/45 bg-ok/[0.04] px-3 py-2.5 font-prose text-[13.5px] text-ok">
           <Icon name="check" className="size-4" /> All clear: every rider is responding, every site has checked in, no food is near its point of no return.
         </div>
       )}
@@ -486,8 +486,8 @@ function Sites({ s, ctx, hl, onVerify }) {
               })}
             </div>
             {!sh.verified
-              ? <p className="text-[12.5px] text-muted-foreground">Served via the nearest food station until verified.</p>
-              : sh.verifyReason && <p className="text-[12.5px] text-muted-foreground">Verified: {sh.verifyReason}</p>}
+              ? <p className="font-prose text-[12.5px] text-muted-foreground">Served via the nearest food station until verified.</p>
+              : sh.verifyReason && <p className="font-prose text-[12.5px] text-muted-foreground">Verified: {sh.verifyReason}</p>}
             <div className="flex flex-wrap gap-1.5">
               {Object.keys(FACILITY_LABEL).map((f) => (
                 <button key={f} type="button" aria-pressed={!!sh.has[f]} title={`Toggle ${FACILITY_LABEL[f]}`}
@@ -531,7 +531,7 @@ function Stations({ s, ctx, hl }) {
                   </div>
                 ))}
               </div>
-            ) : <p className="text-[12.5px] text-muted-foreground">Shelves empty.</p>}
+            ) : <p className="font-prose text-[12.5px] text-muted-foreground">Shelves empty.</p>}
             <div className="mt-auto pt-1">
               <Button size="sm" variant={st.open ? 'outline' : 'destructive'} className={cn(st.open && 'text-bad hover:text-bad')}
                 onClick={() => ctx.act({ type: 'open', id: st.id }, `${st.name} ${st.open ? 'closed' : 'reopened'}`, 'warn')}>{st.open ? 'Close station' : 'Reopen'}</Button>
@@ -558,7 +558,7 @@ function BatchCard({ s, b, hl }) {
           <b className="font-semibold">{b.qty} {rule.unit} · {byId(s.donors, b.donorId).name}</b>
           <span className="flex flex-wrap gap-1"><Tone level={TIER_TONE[rule.tier]}>{TIERS[rule.tier].label}</Tone><Tone level={st.level}>{st.label}</Tone></span>
         </div>
-        <p className="text-[12.5px] text-muted-foreground">{st.detail}</p>
+        <p className="font-prose text-[12.5px] text-muted-foreground">{st.detail}</p>
         <KV className="mt-1" items={[
           ['Unclaimed', b.remaining],
           ['Moving', moving],
