@@ -18,8 +18,8 @@ const ROLE_BG = { donor: 'bg-donor/12 text-donor', shelter: 'bg-shelter/12 text-
 
 export function Logo({ className }) {
   return (
-    <span aria-hidden="true" className={cn('size-8 shrink-0 rounded-full shadow-sm ring-2 ring-background', className)}
-      style={{ background: 'conic-gradient(from 180deg, #34d399 0 50%, #0f766e 50% 100%)' }} />
+    <img src="/nexus-logo-2.svg" alt="" aria-hidden="true" width="32" height="32"
+      className={cn('size-8 shrink-0 rounded-full shadow-sm ring-2 ring-background', className)} />
   );
 }
 

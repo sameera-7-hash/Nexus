@@ -3,39 +3,40 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* shadcn/ui tokens (warm neutral base, teal primary) plus NEXUS's food-safety and entity colours. */
+/* shadcn/ui tokens (light: cream and leaf green from the palette #5B913B #77B254 #FFE8B6 #D99D81) plus NEXUS's
+   food-safety and entity colours. Fills that carry white text use a slightly deeper shade so it stays readable. */
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.983 0.003 85);
-  --foreground: oklch(0.2 0.006 60);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.006 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.006 60);
-  --primary: oklch(0.51 0.09 186);
-  --primary-foreground: oklch(0.985 0.01 180);
-  --secondary: oklch(0.961 0.004 85);
-  --secondary-foreground: oklch(0.25 0.006 60);
-  --muted: oklch(0.961 0.004 85);
-  --muted-foreground: oklch(0.5 0.012 70);
-  --accent: oklch(0.955 0.025 182);
-  --accent-foreground: oklch(0.38 0.075 186);
+  --background: #fffaf0;            /* cream, a pale tint of #FFE8B6 */
+  --foreground: #2b2a20;
+  --card: #fffefa;
+  --card-foreground: #2b2a20;
+  --popover: #fffefa;
+  --popover-foreground: #2b2a20;
+  --primary: #4e8232;               /* #5B913B deepened just enough for white button text */
+  --primary-foreground: #ffffff;
+  --secondary: #fff1d6;
+  --secondary-foreground: #3b3a2a;
+  --muted: #fbf1de;
+  --muted-foreground: #6b6250;
+  --accent: #ffe8b6;                /* palette cream: selected cards, hovers */
+  --accent-foreground: #3f6b26;
   --destructive: oklch(0.55 0.21 27);
-  --border: oklch(0.912 0.007 80);
-  --input: oklch(0.89 0.008 80);
-  --ring: oklch(0.6 0.1 186);
+  --border: #efdcc6;                /* warm sand between #FFE8B6 and #D99D81 */
+  --input: #e5ccb3;
+  --ring: #77b254;                  /* palette light green: focus rings */
 
   /* Food safety: green safe, amber < 50 % of safe time left, red < 25 % or expired. */
-  --ok: oklch(0.55 0.15 150);
+  --ok: #4e8232;
   --warn: oklch(0.6 0.15 58);
   --bad: oklch(0.56 0.21 27);
   --info: oklch(0.52 0.19 262);
   /* Map entities */
-  --donor: oklch(0.62 0.18 45);
-  --shelter: oklch(0.51 0.09 186);
+  --donor: #a26249;                 /* #D99D81 terracotta, deepened for white text */
+  --shelter: #5b913b;               /* palette leaf green */
   --station: oklch(0.54 0.22 295);
   --rider: oklch(0.55 0.2 262);
-  --map-bg: oklch(0.975 0.004 85);
+  --map-bg: #fff6e3;
 }
 
 .dark {

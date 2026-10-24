@@ -367,12 +367,12 @@ function Phone({ s, ctx, id }) {
                 <div className="flex-1"><b className="text-[15px]">{t.qty} {RULES[t.category].unit}</b><div className="text-xs text-[#66615a]">{RULES[t.category].label} · safe time left</div></div>
               </div>
               <div className={cn(step, !atPickup && 'text-[#888]')}><i className="size-2.5 shrink-0 rounded-full bg-[#2563eb]" /><span>{atPickup ? 'Pick up at' : 'Picked up from'} <b>{d.name}</b></span></div>
-              <div className={cn(step, atPickup && 'text-[#888]')}><i className="size-2.5 shrink-0 rounded-full bg-[#0f766e]" /><span>Drop at <b>{sh.name}</b> · ETA {Math.max(1, Math.round(t.eta - s.now))} min</span></div>
+              <div className={cn(step, atPickup && 'text-[#888]')}><i className="size-2.5 shrink-0 rounded-full bg-[#4e8232]" /><span>Drop at <b>{sh.name}</b> · ETA {Math.max(1, Math.round(t.eta - s.now))} min</span></div>
               {b.notes && <div className="text-xs text-[#66615a]">Note: {b.notes}</div>}
             </>}
           </div>
           <button type="button" onClick={() => ctx.act({ type: 'heartbeat', id: r.id }, `${r.name}: "I'm still on it". Silence timer reset.`)}
-            className={cn('mt-auto flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl text-base font-bold text-white shadow-md transition-transform active:scale-[0.98]', r.silent ? 'bg-[#b91c1c]' : 'bg-[#0f766e]')}>
+            className={cn('mt-auto flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl text-base font-bold text-white shadow-md transition-transform active:scale-[0.98]', r.silent ? 'bg-[#b91c1c]' : 'bg-[#4e8232]')}>
             <Icon name="heart" className="size-5 animate-beat" /> I'm still on it
           </button>
           <div className="text-center text-[11.5px] text-[#66615a]">{t ? `Silence limit ${t.holdMin.toFixed(1)} min · scales with the food's safe time` : 'Heartbeat keeps your jobs reserved'}</div>

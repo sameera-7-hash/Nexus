@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,7 +70,13 @@ function RoleCard({ role, ctx }) {
   );
 }
 
-export default function LoginView({ ctx }) {
+export default function LoginView({ me, page, ctx }) {
+  // #/login (the top bar's "Sign in") lands on the role cards; the App scrolls to the top first, so wait a frame.
+  useEffect(() => {
+    if (page !== 'login') return;
+    const id = requestAnimationFrame(() => document.getElementById('roles')?.scrollIntoView({ block: 'start' }));
+    return () => cancelAnimationFrame(id);
+  }, [page]);
   return (
     <div className="relative isolate overflow-hidden">
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(60rem_30rem_at_10%_-10%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent),radial-gradient(40rem_24rem_at_100%_0%,color-mix(in_oklab,var(--donor)_10%,transparent),transparent)]" />
@@ -98,6 +104,11 @@ export default function LoginView({ ctx }) {
               </span>
             ))}
           </div>
+          {me ? (
+            <Button asChild size="lg" className="self-start"><a href={ROLES[me.role].home}>Continue to your dashboard as {me.name} <ArrowRight /></a></Button>
+          ) : (
+            <Button asChild size="lg" className="self-start"><a href="#/login">Choose your role <ArrowRight /></a></Button>
+          )}
           <p className="flex items-start gap-2 rounded-lg border border-dashed bg-card/60 px-3.5 py-2.5 font-prose text-[13.5px] text-muted-foreground">
             <Icon name="users" className="mt-0.5 size-4 shrink-0" />
             <span>Tip for judges: sign in as a donor in one window and the coordinator in another, then post food and watch it appear live.</span>
@@ -110,7 +121,7 @@ export default function LoginView({ ctx }) {
           <h2 id="how-h" className="relative mb-7 text-center text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">How it works</h2>
           <div className="relative"><HowItWorks /></div>
         </section>
-        <div>
+        <div id="roles" className="scroll-mt-20">
           <h2 className="mb-1 text-2xl font-bold tracking-tight">Choose your <span className="font-serif text-[1.15em] font-normal text-primary italic">role</span></h2>
           <p className="mb-5 font-prose text-[15px] text-muted-foreground">Demo accounts are pre-filled. Every password is “demo”.</p>
         <div className="grid gap-5 md:grid-cols-3">

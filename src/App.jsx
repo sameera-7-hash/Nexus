@@ -17,7 +17,9 @@ import * as Shelter from '@/views/Shelter';
 import * as Coordinator from '@/views/Coordinator';
 import * as Stations from '@/views/Stations';
 
+// '' is the landing page at the site root, open to everyone; #/login is the same page, scrolled to the role cards.
 const PAGES = {
+  '':          { view: Login,       role: null, bare: true },
   login:       { view: Login,       role: null, bare: true },
   stations:    { view: Stations,    role: null },
   donor:       { view: Donor,       role: 'donor' },
@@ -40,7 +42,7 @@ export default function App() {
   const def = PAGES[page];
 
   let redirect = null;
-  if (!def) redirect = me ? ROLES[me.role].home : '#/login';
+  if (!def) redirect = '#/';
   else if (def.role && !me) redirect = '#/login';
   else if (def.role && me.role !== def.role) redirect = ROLES[me.role].home;
 
@@ -81,7 +83,7 @@ export default function App() {
     notify(`Signed in as ${who.name} (${ROLES[who.role].label})`);
     go(ROLES[who.role].home);
   };
-  const signOut = () => { logout(); setMe(null); notify('Signed out'); go('#/login'); };
+  const signOut = () => { logout(); setMe(null); notify('Signed out'); go('#/'); };
 
   // Red-alert count on the coordinator's Live Ops tab.
   const badges = page === 'coordinator' && s ? { ops: alerts(s).filter((a) => a.level === 'bad').length } : {};
@@ -102,7 +104,7 @@ export default function App() {
       <main id="view" ref={main} tabIndex={-1}
         className={cn('outline-none', nav.length > 0 && 'lg:pl-60 max-lg:pb-20')}>
         {!redirect && View && s && (
-          <View key={`${page}/${me?.email ?? ''}`} s={s} me={me} section={sec} ctx={ctx} />
+          <View key={`${page}/${me?.email ?? ''}`} s={s} me={me} page={page} section={sec} ctx={ctx} />
         )}
       </main>
       {!redirect && nav.length > 0 && <BottomNav page={page} nav={nav} section={sec} badges={badges} />}
