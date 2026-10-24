@@ -202,3 +202,9 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Leaflet map used by the pickup location step. */
+.nexus-map { font: inherit; background: var(--muted); }
+.dark .nexus-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.7); }
+.nexus-marker { background: transparent; border: 0; }
+.nexus-marker span { display: grid; place-items: center; width: 34px; height: 34px; background: #fff; border: 2px solid var(--primary); border-radius: 50%; font-size: 17px; box-shadow: 0 3px 10px #0002; }

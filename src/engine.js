@@ -528,8 +528,8 @@ function arrive(s, t) {
 }
 
 // ---------- Operator / field events ----------
-export function addBatch(s, { donorId, category, qty, shelfMin, notes, photo }) {
-  const b = { id: `B${s.seq++}`, donorId, category, qty, expiresAt: s.now + (shelfMin ?? RULES[category].safeMin), notes, photo };
+export function addBatch(s, { donorId, category, qty, shelfMin, notes, photo, pickup }) {
+  const b = { id: `B${s.seq++}`, donorId, category, qty, expiresAt: s.now + (shelfMin ?? RULES[category].safeMin), notes, photo, pickup };
   s.batches.push(b);
   initBatch(s, b);
   dispatch(s);

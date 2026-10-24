@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Callout, Empty, KV, PageHeader, Ring, Section, StatusDisc, TIER_TONE, Tone } from '@/components/app/bits';
 import { Pattern } from '@/components/app/art';
+import { DEFAULT_PICKUP, LocationStep } from '@/components/app/location-step';
 import { Icon } from '@/lib/icons';
 import { CARD_TONE } from '@/lib/tone';
 import { notify } from '@/lib/notify';
@@ -58,7 +59,7 @@ export default function DonorView({ s, me, section, ctx }) {
       </>}
       {section === 'post' && <>
         <PageHeader eyebrow="Post surplus food" icon="plus" title="What do you have to give?">
-          Three quick steps. The safe time fills in from the food type, and riders are dispatched the moment you confirm.
+          Four quick steps. The safe time fills in from the food type, and riders are dispatched the moment you confirm.
         </PageHeader>
         <PostFlow me={me} ctx={ctx} />
       </>}
@@ -124,6 +125,7 @@ function Donations({ s, mine, limit }) {
               <KV className="mt-1.5" items={[
                 ['Tier', TIERS[r.tier].label],
                 st.riders.length && ['Rider', st.riders.join(', ')],
+                b.pickup && ['Pickup', b.pickup.label || `${b.pickup.lat.toFixed(4)}, ${b.pickup.lng.toFixed(4)}`],
                 ['Delivered', `${b.delivered ?? 0}/${b.qty}`],
               ]} />
               {b.notes && <p className="mt-1 font-prose text-xs text-muted-foreground">Notes: {b.notes}</p>}
@@ -175,7 +177,8 @@ function Where({ s, mine }) {
   );
 }
 
-const STEPS = ['Food type', 'Quantity & pickup', 'Confirm'];
+const STEPS = ['Food type', 'Quantity & notes', 'Pickup location', 'Confirm'];
+const LAST = STEPS.length;
 
 const newItem = (k) => ({ qty: '60', safe: splitTime(RULES[k].safeMin) });
 const minutesOf = (item) => Number(item.safe.value) * UNITS[item.safe.unit];
@@ -189,6 +192,7 @@ function PostFlow({ me, ctx }) {
   const [items, setItems] = useState(() => ({ [first]: newItem(first) }));
   const [notes, setNotes] = useState('');
   const [photo, setPhoto] = useState('');
+  const [pickup, setPickup] = useState(DEFAULT_PICKUP);
 
   const toggle = (k) => {
     if (selected.includes(k)) { setSelected(selected.filter((x) => x !== k)); return; }
@@ -206,9 +210,10 @@ function PostFlow({ me, ctx }) {
         if (!(minutesOf(items[k]) >= 1)) { notify(`Enter how long the ${RULES[k].label.toLowerCase()} stays safe.`, 'bad'); document.getElementById(`safe-${k}`)?.focus(); return; }
       }
     }
-    if (step < 3) { setStep(step + 1); return; }
+    if (step < LAST) { setStep(step + 1); return; }
+    const where = { lat: pickup.lat, lng: pickup.lng, label: pickup.label.trim() || undefined, contact: pickup.contact.trim() || undefined };
     for (const k of selected) {
-      ctx.act({ type: 'addBatch', donorId: me.entityId, category: k, qty: Math.round(Number(items[k].qty)), shelfMin: minutesOf(items[k]), notes: notes.trim() || undefined, photo: photo || undefined });
+      ctx.act({ type: 'addBatch', donorId: me.entityId, category: k, qty: Math.round(Number(items[k].qty)), shelfMin: minutesOf(items[k]), notes: notes.trim() || undefined, photo: photo || undefined, pickup: where });
     }
     const summary = selected.map((k) => `${Math.round(Number(items[k].qty))} ${RULES[k].unit} of ${RULES[k].label.toLowerCase()}`).join(', ');
     notify(`Posted ${summary}. Dispatching riders now.`);
@@ -305,6 +310,13 @@ function PostFlow({ me, ctx }) {
 
           {step === 3 && (
             <fieldset>
+              <legend className="sr-only">Pickup location</legend>
+              <LocationStep value={pickup} onChange={setPickup} />
+            </fieldset>
+          )}
+
+          {step === 4 && (
+            <fieldset>
               <legend className="sr-only">Confirm</legend>
               <ul className="flex flex-col divide-y rounded-lg border bg-muted/30 text-sm">
                 {selected.map((k) => {
@@ -324,7 +336,12 @@ function PostFlow({ me, ctx }) {
                 })}
               </ul>
               <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 rounded-lg border bg-muted/30 p-4 text-sm">
-                <dt className="text-muted-foreground">Pickup</dt><dd className="font-semibold">{me.name}</dd>
+                <dt className="text-muted-foreground">Pickup</dt>
+                <dd className="font-semibold">
+                  {pickup.label.trim() || me.name}
+                  <span className="block font-mono text-xs font-normal text-muted-foreground tabular">{pickup.lat.toFixed(5)}, {pickup.lng.toFixed(5)}</span>
+                </dd>
+                {pickup.contact.trim() && <><dt className="text-muted-foreground">Contact</dt><dd className="font-semibold">{pickup.contact.trim()}</dd></>}
                 {notes.trim() && <><dt className="text-muted-foreground">Notes</dt><dd className="font-semibold">{notes.trim()}</dd></>}
                 <dt className="text-muted-foreground">Photo</dt><dd className="font-semibold">{photo || 'None'}</dd>
               </dl>
@@ -336,7 +353,7 @@ function PostFlow({ me, ctx }) {
 
           <div className="mt-6 flex justify-between gap-2 border-t pt-5">
             <Button type="button" variant="ghost" className={cn(step === 1 && 'invisible')} onClick={() => setStep(Math.max(1, step - 1))}><ArrowLeft /> Back</Button>
-            <Button type="submit" size="lg" disabled={!selected.length}>{step === 3 ? <>Post {selected.length > 1 ? `${selected.length} batches` : ''} and dispatch riders <Send /></> : <>Continue <ArrowRight /></>}</Button>
+            <Button type="submit" size="lg" disabled={!selected.length}>{step === LAST ? <>Post {selected.length > 1 ? `${selected.length} batches` : ''} and dispatch riders <Send /></> : <>Continue <ArrowRight /></>}</Button>
           </div>
         </form>
       </CardContent>
