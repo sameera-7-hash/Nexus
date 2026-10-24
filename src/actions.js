@@ -5,7 +5,7 @@ import { scenario } from './scenario.js';
 
 export function freshState() {
   const s = E.createState(scenario);
-  s.sim = { running: false, speed: 3 };
+  s.sim = { running: true, speed: 3 };
   E.dispatch(s);
   return s;
 }

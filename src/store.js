@@ -1,11 +1,11 @@
 // Shared live state across tabs.
-// - The coordinator tab holds a heartbeat lock ("leader") and owns the simulation clock.
+// - One tab (whichever claims it first) holds a heartbeat lock ("leader") and owns the simulation clock.
 // - Every other tab renders the state it is sent and posts actions to the leader.
 // - If no leader is alive, a tab applies its own action to the persisted state, so posting food
-//   still works with only a donor tab open (the clock just doesn't move).
+//   still works between the leader closing and another tab taking over.
 import { applyAction, freshState } from './actions.js';
 
-const STATE_KEY = 'nexus:state:v3';
+const STATE_KEY = 'nexus:state:v4'; // v4: the clock starts running
 const LEADER_KEY = 'nexus:leader';
 const LEADER_TTL = 3000;
 const TICK_MS = 100;
@@ -108,7 +108,7 @@ export function initStore() {
   return state;
 }
 
-// The coordinator tab asks to own the clock; other roles never do.
+// Any tab may own the clock; the first to claim the lock runs it, and another takes over if it closes.
 export function setLeadership(want) {
   wantLead = want;
   leading = want ? claimLeadership() : false;

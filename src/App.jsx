@@ -52,7 +52,8 @@ export default function App() {
     go(redirect);
   }, [redirect]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { if (!redirect) setLeadership(page === 'coordinator'); }, [page, redirect]);
+  // Every open tab offers to run the clock; the first one holds it and the rest follow its broadcasts.
+  useEffect(() => { setLeadership(true); }, []);
 
   const nav = def?.view.nav ?? [];
   const sec = nav.some((n) => n.id === section) ? section : nav[0]?.id ?? '';

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Callout, Empty, KV, PageHeader, Ring, Section, StatusDisc, TIER_TONE, Tone } from '@/components/app/bits';
 import { Pattern } from '@/components/app/art';
-import { DEFAULT_PICKUP, LocationStep } from '@/components/app/location-step';
+import { DEFAULT_PICKUP, LocationStep, PickupPreview } from '@/components/app/location-step';
 import { Icon } from '@/lib/icons';
 import { CARD_TONE } from '@/lib/tone';
 import { notify } from '@/lib/notify';
@@ -335,7 +335,8 @@ function PostFlow({ me, ctx }) {
                   );
                 })}
               </ul>
-              <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 rounded-lg border bg-muted/30 p-4 text-sm">
+              <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+              <dl className="grid content-start grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 rounded-lg border bg-muted/30 p-4 text-sm">
                 <dt className="text-muted-foreground">Pickup</dt>
                 <dd className="font-semibold">
                   {pickup.label.trim() || me.name}
@@ -345,6 +346,8 @@ function PostFlow({ me, ctx }) {
                 {notes.trim() && <><dt className="text-muted-foreground">Notes</dt><dd className="font-semibold">{notes.trim()}</dd></>}
                 <dt className="text-muted-foreground">Photo</dt><dd className="font-semibold">{photo || 'None'}</dd>
               </dl>
+              <PickupPreview point={pickup} />
+              </div>
               <Callout className="mt-4" tone="info" icon="shield" title="How it will be routed">
                 Each food type is posted as its own batch, so riders, sites and safe-time checks are handled separately for each.
               </Callout>

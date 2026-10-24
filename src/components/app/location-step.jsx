@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Callout } from '@/components/app/bits';
+import { cn } from '@/lib/utils';
 
 // Pune city centre, same default as the Nexus prototype.
 export const DEFAULT_PICKUP = { lat: 18.5204, lng: 73.8567, label: '', contact: '' };
@@ -30,6 +31,30 @@ function Recenter({ point }) {
   const map = useMap();
   useEffect(() => { map.setView([point.lat, point.lng], Math.max(map.getZoom(), 14)); }, [point.lat, point.lng, map]);
   return null;
+}
+
+// Rings that pulse outward from the pickup pin while the dispatcher looks for a receiving site.
+const ripple = L.divIcon({ className: 'nexus-ripple', html: '<span></span><span></span><span></span>', iconSize: [240, 240], iconAnchor: [120, 120] });
+
+// Read-only map for the confirm step: the chosen pin, a search ripple, nothing to click.
+export function PickupPreview({ point, className }) {
+  return (
+    <div className={cn('relative isolate overflow-hidden rounded-lg border', className)}>
+      <MapContainer key={`${point.lat},${point.lng}`} center={[point.lat, point.lng]} zoom={14} className="nexus-map z-0 h-full min-h-[260px] w-full"
+        dragging={false} scrollWheelZoom={false} doubleClickZoom={false} touchZoom={false} boxZoom={false} keyboard={false} zoomControl={false}>
+        <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <Marker position={[point.lat, point.lng]} icon={ripple} interactive={false} />
+        <Marker position={[point.lat, point.lng]} icon={pin} interactive={false} />
+      </MapContainer>
+      <div role="status" className="pointer-events-none absolute top-3 left-3 z-[400] flex items-center gap-2 rounded-full border bg-card/90 py-1.5 pr-3.5 pl-2.5 text-[12.5px] font-semibold shadow-sm backdrop-blur">
+        <span className="relative flex size-2.5">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
+          <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
+        </span>
+        Searching for the nearest Shelter / Needy…
+      </div>
+    </div>
+  );
 }
 
 export function LocationStep({ value, onChange }) {

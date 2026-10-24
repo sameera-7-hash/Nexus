@@ -30,7 +30,7 @@ function SimStatus({ s }) {
   const label = { live: 'Live', paused: 'Paused', offline: 'Clock offline' }[status];
   const tone = { live: 'border-ok/30 bg-ok/10 text-ok', paused: 'border-warn/30 bg-warn/10 text-warn', offline: 'text-muted-foreground' }[status];
   return (
-    <div className="flex items-center gap-2" title={status === 'offline' ? 'The simulation clock runs in the coordinator tab. Open it to move riders.' : ''}>
+    <div className="flex items-center gap-2" title={status === 'offline' ? 'The simulation clock is starting up. It runs in whichever NEXUS tab opened first.' : ''}>
       <Badge variant="outline" className={cn('gap-1.5 rounded-full px-2.5', tone)}>
         <i className={cn('size-2 rounded-full bg-current', status === 'live' && 'animate-pulse-dot')} />
         <span className="max-sm:sr-only">{label}</span>

@@ -207,4 +207,10 @@
 .nexus-map { font: inherit; background: var(--muted); }
 .dark .nexus-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.7); }
 .nexus-marker { background: transparent; border: 0; }
+.nexus-ripple { background: transparent; border: 0; pointer-events: none; }
+.nexus-ripple span { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--primary); background: color-mix(in oklab, var(--primary) 18%, transparent); opacity: 0; animation: nexus-ripple 3s cubic-bezier(.2, .6, .35, 1) infinite; }
+.nexus-ripple span:nth-child(2) { animation-delay: 1s; }
+.nexus-ripple span:nth-child(3) { animation-delay: 2s; }
+@keyframes nexus-ripple { 0% { transform: scale(.12); opacity: .9; } 100% { transform: scale(1); opacity: 0; } }
+.nexus-marker { z-index: 1000 !important; }
 .nexus-marker span { display: grid; place-items: center; width: 34px; height: 34px; background: #fff; border: 2px solid var(--primary); border-radius: 50%; font-size: 17px; box-shadow: 0 3px 10px #0002; }
