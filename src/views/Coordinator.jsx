@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pause, Play, Plus, RotateCcw, ShieldCheck, Zap } from 'lucide-react';
+import { Bike, House, Package, Pause, Play, Plus, RotateCcw, ShieldCheck, Truck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,12 +12,14 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Bar, Empty, KV, Metric, PageHeader, Ring, Section, StatusDisc, TIER_TONE, Tone } from '@/components/app/bits';
+import { CityMap } from '@/components/app/city-map';
 import { Icon } from '@/lib/icons';
 import { notify } from '@/lib/notify';
 import { CARD_TONE, TONE } from '@/lib/tone';
 import { cn } from '@/lib/utils';
 import { RULES, TIERS, FACILITY_LABEL, VEHICLES, activeTasks, isCarrying, site, perPerson, minutesToNoReturn } from '@/engine.js';
-import { byId, fmt, clock, ago } from '@/ui/kit.js';
+import { byId, fmt, clock, ago, ist, istShort } from '@/ui/kit.js';
+import { useInterval } from '@/hooks/use-sim';
 import { batchStatus, batchTotal, checkInState, impact } from '@/ui/derive.js';
 import { alerts, SCENARIOS, scenarioActions } from '@/ui/alerts.js';
 
@@ -235,92 +237,16 @@ function ImpactTiles({ s }) {
 
 function Legend() {
   const dot = 'inline-block size-2.5 align-middle mr-1.5';
+  const glyph = 'inline-grid size-4 place-items-center align-middle mr-1 rounded-full text-white [&>svg]:size-2.5';
   return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground max-sm:hidden">
-      <span><i className={cn(dot, 'rounded-[2px] bg-donor')} />Donor</span>
-      <span><i className={cn(dot, 'rounded-full bg-shelter')} />Shelter / camp</span>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground max-sm:hidden">
+      <span><i className={cn(glyph, 'rounded-[4px] bg-donor')}><Package /></i>Donor</span>
+      <span><i className={cn(glyph, 'bg-shelter')}><House /></i>Shelter / camp</span>
       <span><i className={cn(dot, 'rotate-45 rounded-[2px] bg-station')} />Food station</span>
-      <span><i className={cn(dot, 'rounded-full border-2 border-dashed border-warn')} />Unconfirmed</span>
-      <span><i className={cn(dot, 'rounded-full bg-rider')} />Rider</span>
+      <span><i className={cn(dot, 'rounded-full border-2 border-dashed border-shelter')} />Unverified</span>
+      <span><i className={cn(glyph, 'bg-rider')}><Bike /></i>Bike</span>
+      <span><i className={cn(glyph, 'bg-rider')}><Truck /></i>Tempo</span>
     </div>
-  );
-}
-
-// Static layers re-render from state; rider groups are keyed so React keeps the same node and the CSS
-// transform transition makes them glide between updates instead of jumping.
-function CityMap({ s, selected, onSelect }) {
-  const grid = [];
-  for (let i = 0; i <= 10; i++) grid.push(<line key={`v${i}`} x1={i} y1="0" x2={i} y2="10" className="grid" />, <line key={`h${i}`} x1="0" y1={i} x2="10" y2={i} className="grid" />);
-  return (
-    <svg viewBox="-0.9 -0.7 11.8 11.8" role="img" aria-label="City map with donors, receiving sites, food stations and riders"
-      className="map block aspect-square w-full rounded-lg border bg-map">
-      <g>{grid}</g>
-      {/* Decorative city: parks, a river and arterial roads, faint enough not to compete with live data. */}
-      <g aria-hidden="true">
-        <rect x="5.9" y="0.4" width="1.6" height="1.1" rx="0.25" className="park" />
-        <rect x="0.3" y="4.3" width="1.3" height="1.6" rx="0.25" className="park" />
-        <rect x="6.6" y="8.9" width="1.5" height="0.9" rx="0.25" className="park" />
-        <path d="M-0.9 6.4 C 1.5 5.6, 2.6 6.9, 4.4 6.2 S 6.4 4.6, 8.2 5.6 S 9.8 6.1, 10.9 5.2" className="river" />
-        <path d="M-0.9 2.8 L 10.9 3.3" className="road" />
-        <path d="M5.2 -0.7 C 5 3, 4.6 6, 5.4 11.1" className="road" />
-        <path d="M-0.9 9.6 C 3 8.9, 7 9.2, 10.9 8.2" className="road" />
-      </g>
-      <g>
-        {s.donors.map((d) => {
-          const left = s.batches.filter((b) => b.donorId === d.id && b.remaining > 0 && b.status !== 'expired').reduce((a, b) => a + b.remaining, 0);
-          return (
-            <g key={d.id}>
-              <rect x={d.x - 0.22} y={d.y - 0.22} width="0.44" height="0.44" rx="0.06" fill="var(--donor)" />
-              <text x={d.x} y={d.y - 0.36} textAnchor="middle" className="lbl">{d.name}</text>
-              {left > 0 && <text x={d.x} y={d.y + 0.55} textAnchor="middle" className="lbl small">{left} waiting</text>}
-            </g>
-          );
-        })}
-        {s.shelters.map((sh) => {
-          const ci = checkInState(s, sh);
-          const col = !sh.open ? 'var(--bad)' : ci.key === 'ghost' ? 'var(--warn)' : 'var(--shelter)';
-          return (
-            <g key={sh.id}>
-              <g className={cn('site', ci.key === 'ghost' && 'ghost')}><circle cx={sh.x} cy={sh.y} r="0.28" fill={sh.verified ? col : 'var(--map-bg)'} stroke={col} strokeWidth="0.07" /></g>
-              <text x={sh.x} y={sh.y + 0.6} textAnchor="middle" className="lbl">{sh.name}</text>
-              <text x={sh.x} y={sh.y + 0.88} textAnchor="middle" className="lbl small">
-                {!sh.open ? 'CLOSED' : ci.key === 'ghost' ? `last seen ${ago(ci.since)}` : !sh.verified ? 'unverified · via station' : `${sh.headcount} people`}
-              </text>
-            </g>
-          );
-        })}
-        {s.stations.map((st) => (
-          <g key={st.id}>
-            <rect x={st.x - 0.2} y={st.y - 0.2} width="0.4" height="0.4" transform={`rotate(45 ${st.x} ${st.y})`} fill={st.open ? 'var(--station)' : 'var(--bad)'} />
-            <text x={st.x} y={st.y + 0.6} textAnchor="middle" className="lbl">{st.name}</text>
-          </g>
-        ))}
-      </g>
-      <g>
-        {activeTasks(s).filter((t) => t.phase !== 'queued').map((t) => {
-          const r = byId(s.riders, t.riderId);
-          const d = byId(s.donors, byId(s.batches, t.batchId).donorId);
-          const sh = site(s, t.shelterId);
-          return t.phase === 'to_pickup'
-            ? <g key={t.id}><line x1={r.x} y1={r.y} x2={d.x} y2={d.y} className="route pickup" /><line x1={d.x} y1={d.y} x2={sh.x} y2={sh.y} className="route pickup" opacity=".3" /></g>
-            : <line key={t.id} x1={r.x} y1={r.y} x2={sh.x} y2={sh.y} className={cn('route', t.rerouted ? 'reroute' : 'carry')} />;
-        })}
-      </g>
-      <g>
-        {s.riders.map((r) => {
-          const t = r.taskId && byId(s.tasks, r.taskId);
-          const color = r.silent ? 'var(--bad)' : r.traffic ? 'var(--warn)' : 'var(--rider)';
-          return (
-            <g key={r.id} className="rider" style={{ transform: `translate(${r.x}px, ${r.y}px)` }} onClick={() => onSelect(r.id)}>
-              <title>{r.name}: click to preview their phone</title>
-              {r.id === selected && <circle r="0.3" className="sel" />}
-              <circle r="0.16" fill={color} />
-              <text x="0.24" y="0.08" className="lbl rider-lbl" fill={color}>{r.name}{t && isCarrying(t) ? ` · ${t.qty}` : ''}{r.silent ? ' ⚠' : ''}</text>
-            </g>
-          );
-        })}
-      </g>
-    </svg>
   );
 }
 
@@ -397,6 +323,7 @@ function PhonePanel({ s, ctx, selected, onSelect }) {
 
 // Always a light "device" screen, whatever the app theme.
 function Phone({ s, ctx, id }) {
+  useInterval(1000); // status-bar clock keeps ticking while the sim is paused
   const r = byId(s.riders, id);
   if (!r) return null;
   const t = r.taskId && byId(s.tasks, r.taskId);
@@ -411,7 +338,7 @@ function Phone({ s, ctx, id }) {
       <div className="flex min-h-[560px] flex-col overflow-hidden rounded-[30px] bg-[#f7f6f3] text-[#1b1a18]">
         <div className="mx-auto h-6 w-28 rounded-b-2xl bg-[#0e0e0d]" />
         <div className="flex justify-between px-5 pt-1.5 font-mono text-[11px] font-semibold text-[#444]">
-          <span>{clock(s.now).replace('T+', '')}</span><span>{r.silent ? 'No signal' : '4G ▮▮▮'}</span>
+          <span>{istShort()}</span><span>{r.silent ? 'No signal' : '4G ▮▮▮'}</span>
         </div>
         <div className="flex flex-1 flex-col gap-3 px-4 pt-3 pb-4">
           <div><div className="text-xs text-[#66615a]">NEXUS Rider · {VEHICLES[r.vehicle].label}</div><h3 className="text-lg font-bold tracking-tight">Hi {r.name}</h3></div>
@@ -631,7 +558,7 @@ function LogList({ s, filter }) {
       <ol className="flex flex-col gap-1 text-[12.5px]">
         {rows.map((l, i) => (
           <li key={`${l.t}-${i}`} className={cn('rounded-r-md border-l-[3px] border-l-border bg-muted/40 px-3 py-2', LOG_TONE[l.level])}>
-            <time className="mr-2 font-mono text-[11px] font-semibold text-muted-foreground tabular">{clock(l.t)}</time>{l.msg}
+            <time className="mr-2 font-mono text-[11px] font-semibold text-muted-foreground tabular">{l.at ? ist(l.at) : clock(l.t)}</time>{l.msg}
           </li>
         ))}
       </ol>

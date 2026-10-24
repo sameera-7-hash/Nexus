@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { useInterval } from '@/hooks/use-sim';
 import { ROLES, ACCOUNTS } from '@/auth.js';
 import { isLeader, leaderAlive } from '@/store.js';
-import { clock } from '@/ui/kit.js';
+import { ist } from '@/ui/kit.js';
 
 const ROLE_TEXT = { donor: 'text-donor', shelter: 'text-shelter', coordinator: 'text-info' };
 const ROLE_BG = { donor: 'bg-donor/12 text-donor', shelter: 'bg-shelter/12 text-shelter', coordinator: 'bg-info/12 text-info' };
@@ -35,7 +35,7 @@ function SimStatus({ s }) {
         <i className={cn('size-2 rounded-full bg-current', status === 'live' && 'animate-pulse-dot')} />
         <span className="max-sm:sr-only">{label}</span>
       </Badge>
-      <span className="font-mono text-[13px] font-bold text-foreground/80 tabular">{clock(s.now)}</span>
+      <time className="font-mono text-[13px] font-bold text-foreground/80 uppercase tabular" title="Indian Standard Time">{ist()}</time>
     </div>
   );
 }

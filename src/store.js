@@ -87,7 +87,7 @@ function step() {
 
 export function initStore() {
   state = readJSON(STATE_KEY);
-  if (!state || !state.sim) { state = freshState(); persist(); }
+  if (!state || !state.sim) { state = freshState(); stampLog(); persist(); }
   channel?.addEventListener('message', ({ data }) => {
     if (data.from === tabId) return;
     if (data.kind === 'state' && !leading) { state = data.state; emit(); }
@@ -116,9 +116,16 @@ export function setLeadership(want) {
 }
 
 // Apply on a copy so an engine error can never leave the shared state half-updated mid-demo.
+// The engine logs in simulated minutes; stamp each new entry with the real time so the log can show IST.
+function stampLog() {
+  const now = Date.now();
+  for (const l of state.log ?? []) { if (l.at) break; l.at = now; }
+}
+
 function safeApply(action) {
   try {
     state = applyAction(structuredClone(state), action);
+    stampLog();
     return true;
   } catch (err) {
     console.error(`NEXUS: action "${action.type}" failed and was rolled back`, err);

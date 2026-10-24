@@ -214,3 +214,19 @@
 @keyframes nexus-ripple { 0% { transform: scale(.12); opacity: .9; } 100% { transform: scale(1); opacity: 0; } }
 .nexus-marker { z-index: 1000 !important; }
 .nexus-marker span { display: grid; place-items: center; width: 34px; height: 34px; background: #fff; border: 2px solid var(--primary); border-radius: 50%; font-size: 17px; box-shadow: 0 3px 10px #0002; }
+
+/* Coordinator city map markers: house = shelter/camp, bike or tempo = rider, box = donor, diamond = station. */
+.cm-icon { background: transparent; border: 0; }
+.cm-icon > span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: var(--c); color: #fff; border: 2px solid var(--card); box-shadow: 0 2px 6px #0004; }
+.cm-icon svg { width: 60%; height: 60%; }
+.cm-donor > span { border-radius: 8px; }
+.cm-station > span { width: 70%; height: 70%; margin: 15%; border-radius: 3px; transform: rotate(45deg); }
+.cm-site.cm-hollow > span { background: var(--card); color: var(--c); border: 2px dashed var(--c); }
+.cm-site.cm-ghost > span { animation: beat 1.2s infinite; }
+.cm-rider { transition: transform .25s linear; cursor: pointer; }
+.leaflet-zoom-anim .cm-rider { transition: none; }
+.cm-rider.cm-selected > span { box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--c); }
+.nexus-map .leaflet-tooltip.cm-lbl { background: transparent; border: 0; box-shadow: none; padding: 0; text-align: center; font: 600 12px/1.2 var(--font-sans); color: var(--foreground); text-shadow: 0 0 3px var(--card), 0 0 3px var(--card), 0 0 2px var(--card); white-space: nowrap; }
+.nexus-map .leaflet-tooltip.cm-lbl::before { display: none; }
+.nexus-map .leaflet-tooltip.cm-lbl small { display: block; font-weight: 500; font-size: 10.5px; color: var(--muted-foreground); }
+.nexus-map .leaflet-tooltip.cm-rider-lbl { font-size: 11px; text-align: left; }

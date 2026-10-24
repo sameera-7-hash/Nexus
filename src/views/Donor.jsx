@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Camera, Check, Plus, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -192,7 +192,15 @@ function PostFlow({ me, ctx }) {
   const [items, setItems] = useState(() => ({ [first]: newItem(first) }));
   const [notes, setNotes] = useState('');
   const [photo, setPhoto] = useState('');
+  const [photoUrl, setPhotoUrl] = useState(''); // local preview only; the batch keeps just the file name
   const [pickup, setPickup] = useState(DEFAULT_PICKUP);
+  useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
+
+  const attach = (file) => {
+    setPhoto(file?.name ?? '');
+    setPhotoUrl(file ? URL.createObjectURL(file) : '');
+    if (file) notify('Photo attached');
+  };
 
   const toggle = (k) => {
     if (selected.includes(k)) { setSelected(selected.filter((x) => x !== k)); return; }
@@ -299,7 +307,7 @@ function PostFlow({ me, ctx }) {
                 photo && 'border-solid border-ok/60 bg-ok/5 text-ok')}>
                 {photo ? <Check className="size-5" /> : <Camera className="size-5" />}
                 <span className="font-prose">{photo ? `Photo attached: ${photo}` : 'Add a photo (optional). It helps riders find the right boxes.'}</span>
-                <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const n = e.target.files?.[0]?.name ?? ''; setPhoto(n); if (n) notify('Photo attached'); }} />
+                <input type="file" accept="image/*" className="sr-only" onChange={(e) => attach(e.target.files?.[0])} />
               </label>
               <div className="space-y-1.5">
                 <Label htmlFor="notes">Pickup notes</Label>
@@ -336,7 +344,8 @@ function PostFlow({ me, ctx }) {
                 })}
               </ul>
               <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-              <dl className="grid content-start grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 rounded-lg border bg-muted/30 p-4 text-sm">
+              <div className="flex flex-col gap-4 rounded-lg border bg-muted/30 p-4">
+              <dl className="grid content-start grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 text-sm">
                 <dt className="text-muted-foreground">Pickup</dt>
                 <dd className="font-semibold">
                   {pickup.label.trim() || me.name}
@@ -344,8 +353,15 @@ function PostFlow({ me, ctx }) {
                 </dd>
                 {pickup.contact.trim() && <><dt className="text-muted-foreground">Contact</dt><dd className="font-semibold">{pickup.contact.trim()}</dd></>}
                 {notes.trim() && <><dt className="text-muted-foreground">Notes</dt><dd className="font-semibold">{notes.trim()}</dd></>}
-                <dt className="text-muted-foreground">Photo</dt><dd className="font-semibold">{photo || 'None'}</dd>
+                <dt className="text-muted-foreground">Photo</dt><dd className="font-semibold [overflow-wrap:anywhere]">{photo || 'None'}</dd>
               </dl>
+              {photoUrl && (
+                // Grows to fill the space beside the map; the photo is cropped to fit, never stretched.
+                <div className="relative min-h-44 flex-1 overflow-hidden rounded-md border bg-muted">
+                  <img src={photoUrl} alt={`Photo of the food to be collected (${photo})`} className="absolute inset-0 size-full object-cover" />
+                </div>
+              )}
+              </div>
               <PickupPreview point={pickup} />
               </div>
               <Callout className="mt-4" tone="info" icon="shield" title="How it will be routed">
