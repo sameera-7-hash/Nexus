@@ -499,6 +499,7 @@ export function tick(s, dt) {
     if (b.status !== 'expired' && s.now >= b.expiresAt && b.remaining > 0) {
       s.metrics.wasted += b.remaining;
       log(s, 'critical', `${b.remaining} ${RULES[b.category].unit} expired unclaimed at ${pickupOf(s, b).name}.`, { kind: 'expired', batch: b.id });
+      b.expiredQty = b.remaining;
       b.remaining = 0;
       b.status = 'expired';
     }

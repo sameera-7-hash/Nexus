@@ -1,5 +1,5 @@
 // Read-only selectors that turn engine state into what people need to see. No DOM.
-import { RULES, CONFIG, activeTasks, isCarrying, pickupOf, site, roadKm } from '../engine.js';
+import { RULES, CONFIG, VEHICLES, activeTasks, isCarrying, pickupOf, site, roadKm } from '../engine.js';
 
 const byId = (list, id) => list.find((x) => x.id === id);
 const ACTIVE = new Set(['queued', 'to_pickup', 'loading', 'to_dropoff']);
@@ -28,6 +28,45 @@ export function batchStatus(s, b) {
   }
   if (b.status === 'expired' || spoiled) return { key: 'expired', label: 'Expired', level: 'bad', riders, detail: 'Passed its safe time before it could be delivered. Never handed over.' };
   return { key: 'waiting', label: 'Waiting', level: 'warn', riders, detail: 'Queued for dispatch' };
+}
+
+// The engine's real match for one batch, for the donor's post confirmation and "My donations". Every line
+// comes from engine state: tasks it created, the reason it logged for waiting, the sites it blocked.
+// clockLive: some tab is running the clock (without it, riders don't move and retries don't happen).
+// nowMs: real time now, to turn sim-minute ETAs into wall-clock (IST) times at the current sim speed.
+// -> { key: 'sending' | 'waiting' | 'matched' | 'delivered' | 'expired', label, splits, waitReason, blocked,
+//      remaining, delivered, expiredQty, paused, searching }
+export function matchStatus(s, b, { clockLive = true, nowMs = Date.now() } = {}) {
+  if (!b) return { key: 'sending', label: 'Sending to the dispatcher', splits: [], blocked: [], waitReason: null, remaining: 0, delivered: 0, expiredQty: 0, paused: !clockLive, searching: false };
+  const speed = s.sim?.speed;
+  const splits = s.tasks.filter((t) => t.batchId === b.id && t.phase !== 'released').map((t) => {
+    const r = byId(s.riders, t.riderId);
+    const sh = site(s, t.shelterId);
+    const live = ACTIVE.has(t.phase);
+    return {
+      taskId: t.id, phase: t.phase, live, qty: t.qty, delivered: t.delivered ?? 0,
+      rider: r.name, riderId: r.id, vehicle: VEHICLES[r.vehicle].label, shelter: sh.name, shelterId: sh.id,
+      etaMin: live ? Math.max(0, t.eta - s.now) : null,
+      // speed = sim minutes per real second. With the clock stopped there is no honest wall-clock ETA.
+      etaMs: live && speed && clockLive ? nowMs + (Math.max(0, t.eta - s.now) / speed) * 1000 : null,
+      rerouted: t.rerouted ?? null,
+    };
+  });
+  const moving = splits.some((x) => x.live);
+  const expired = b.status === 'expired';
+  const waiting = b.remaining > 0 && !expired;
+  const delivered = b.delivered ?? 0;
+  const key = moving ? 'matched' : waiting ? 'waiting' : expired && b.expiredQty ? 'expired' : delivered > 0 ? 'delivered' : expired ? 'expired' : 'waiting';
+  const label = { matched: 'Matched', waiting: 'Waiting for a match', delivered: 'Delivered', expired: 'Expired unclaimed' }[key];
+  return {
+    key, label, splits, delivered,
+    remaining: b.remaining,
+    expiredQty: b.expiredQty ?? 0,
+    waitReason: waiting ? b.waitReason ?? null : null,
+    blocked: b.blocked ?? [],
+    paused: !clockLive && (moving || waiting),
+    searching: key === 'waiting' && clockLive,
+  };
 }
 
 export const batchTotal = (b) => Math.max(1, b.expiresAt - (b.postedAt ?? 0));

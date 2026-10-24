@@ -2,7 +2,7 @@
 // "Set a place on the map" step. The GPS position and the chosen pin are separate: a donor can
 // capture GPS, then drag the pin to the bakery down the road.
 import { useEffect, useState } from 'react';
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LocateFixed, MapPin, Navigation } from 'lucide-react';
@@ -38,26 +38,57 @@ function Recenter({ point }) {
   return null;
 }
 
-// Rings that pulse outward from the pickup pin while the dispatcher looks for a receiving site.
+// Rings that pulse outward from the pickup pin, only while the batch is genuinely waiting for a match.
 const ripple = L.divIcon({ className: 'nexus-ripple', html: '<span></span><span></span><span></span>', iconSize: [240, 240], iconAnchor: [120, 120] });
+const dot = (cls) => L.divIcon({ className: `nexus-dot ${cls}`, html: '<span></span>', iconSize: [16, 16], iconAnchor: [8, 8] });
+const SITE_DOT = dot('nexus-dot-site');
+const RIDER_DOT = dot('nexus-dot-rider');
 
-// Read-only map for the confirm step: the chosen pin, a search ripple, nothing to click.
-export function PickupPreview({ point, className }) {
+// Keep every route in view as riders are matched; with none, stay centred on the pin.
+function FitRoutes({ point, routes, riders }) {
+  const map = useMap();
+  const key = routes.map((r) => r.id).join('|');
+  useEffect(() => {
+    if (!routes.length) { map.setView([point.lat, point.lng], 14); return; }
+    map.fitBounds([[point.lat, point.lng], ...routes.map((r) => r.to), ...riders.map((r) => r.at)], { padding: [36, 36], maxZoom: 15 });
+  }, [key, point.lat, point.lng, map]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
+
+// Read-only map for the confirm step: the chosen pin and, once the engine has matched it, the route from
+// the pin to each receiving site and where each rider is now. status: the pill text, or null for none.
+export function PickupPreview({ point, routes = [], riders = [], searching = false, status = null, className }) {
   return (
     <div className={cn('relative isolate overflow-hidden rounded-lg border', className)}>
       <MapContainer key={`${point.lat},${point.lng}`} center={[point.lat, point.lng]} zoom={14} className="nexus-map z-0 h-full min-h-[260px] w-full"
         dragging={false} scrollWheelZoom={false} doubleClickZoom={false} touchZoom={false} boxZoom={false} keyboard={false} zoomControl={false}>
         <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Marker position={[point.lat, point.lng]} icon={ripple} interactive={false} />
+        <FitRoutes point={point} routes={routes} riders={riders} />
+        {routes.map((r) => (
+          <Polyline key={r.id} positions={[[point.lat, point.lng], r.to]} pathOptions={{ color: 'var(--primary)', weight: 3.5 }} interactive={false} />
+        ))}
+        {routes.map((r) => (
+          <Marker key={`site-${r.id}`} position={r.to} icon={SITE_DOT} interactive={false}>
+            <Tooltip permanent direction="bottom" offset={[0, 8]} className="cm-lbl">{r.name}</Tooltip>
+          </Marker>
+        ))}
+        {riders.map((r) => (
+          <Marker key={`rider-${r.id}`} position={r.at} icon={RIDER_DOT} interactive={false}>
+            <Tooltip permanent direction="right" offset={[8, 0]} className="cm-lbl cm-rider-lbl">{r.name}</Tooltip>
+          </Marker>
+        ))}
+        {searching && <Marker position={[point.lat, point.lng]} icon={ripple} interactive={false} />}
         <Marker position={[point.lat, point.lng]} icon={pin} interactive={false} />
       </MapContainer>
-      <div role="status" className="pointer-events-none absolute top-3 left-3 z-[400] flex items-center gap-2 rounded-full border bg-card/90 py-1.5 pr-3.5 pl-2.5 text-[12.5px] font-semibold shadow-sm backdrop-blur">
-        <span className="relative flex size-2.5">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
-        </span>
-        Searching for the nearest Shelter / Needy…
-      </div>
+      {status && (
+        <div role="status" className="pointer-events-none absolute top-3 left-3 z-[400] flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full border bg-card/90 py-1.5 pr-3.5 pl-2.5 text-[12.5px] font-semibold shadow-sm backdrop-blur">
+          <span className="relative flex size-2.5 shrink-0">
+            {searching && <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />}
+            <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
+          </span>
+          {status}
+        </div>
+      )}
     </div>
   );
 }

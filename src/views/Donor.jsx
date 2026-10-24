@@ -13,9 +13,11 @@ import { Icon } from '@/lib/icons';
 import { CARD_TONE } from '@/lib/tone';
 import { notify } from '@/lib/notify';
 import { cn } from '@/lib/utils';
-import { RULES, TIERS } from '@/engine.js';
-import { fmt } from '@/ui/kit.js';
-import { batchStatus, batchTotal, impact } from '@/ui/derive.js';
+import { RULES, TIERS, site } from '@/engine.js';
+import { toLatLng } from '@/geo.js';
+import { useClockLive } from '@/hooks/use-sim';
+import { fmt, ist } from '@/ui/kit.js';
+import { batchStatus, batchTotal, impact, matchStatus } from '@/ui/derive.js';
 
 export const nav = [
   { id: 'home', label: 'Overview', icon: 'home' },
@@ -61,7 +63,7 @@ export default function DonorView({ s, me, section, ctx }) {
         <PageHeader eyebrow="Post surplus food" icon="plus" title="What do you have to give?">
           Four quick steps. The safe time fills in from the food type, and riders are dispatched the moment you confirm.
         </PageHeader>
-        <PostFlow me={me} ctx={ctx} />
+        <PostFlow s={s} me={me} ctx={ctx} />
       </>}
       {section === 'donations' && <>
         <PageHeader eyebrow="My donations" icon="list" title="Where your food is right now" actions={<PostButton />}>
@@ -101,6 +103,7 @@ function Attention({ s, mine }) {
 const ORDER = { waiting: 0, assigned: 1, picked: 2, rerouted: 1, delivered: 3, expired: 4 };
 
 function Donations({ s, mine, limit }) {
+  const clockLive = useClockLive(s);
   if (!mine.length) {
     return <Empty icon="gift" title="No surplus posted yet" action={<PostButton>Post your first batch</PostButton>}>Post your first batch: pick the food type and the safe time fills in for you.</Empty>;
   }
@@ -121,7 +124,7 @@ function Donations({ s, mine, limit }) {
                 <b className="font-semibold">{b.qty} {r.unit} · {r.label}</b>
                 <Tone level={st.level}>{st.label}</Tone>
               </div>
-              <p className="mt-0.5 font-prose text-[13px] text-foreground/80">{st.detail}</p>
+              <MatchDetail s={s} b={b} clockLive={clockLive} className="mt-1" />
               <KV className="mt-1.5" items={[
                 ['Tier', TIERS[r.tier].label],
                 st.riders.length && ['Rider', st.riders.join(', ')],
@@ -133,6 +136,91 @@ function Donations({ s, mine, limit }) {
           </article>
         );
       })}
+    </div>
+  );
+}
+
+// The engine's real match for one batch: each rider split with its shelter and ETA, or the engine's own
+// reason it is still waiting, the sites its facility rules skipped, or that it expired unclaimed.
+const SPLIT_PHASE = {
+  queued: 'finishing a drop-off, then coming to you', to_pickup: 'on the way to you', loading: 'loading at your pickup',
+  to_dropoff: 'carrying it', done: 'delivered', spoiled: 'passed its safe time in transit, not handed over', stranded: 'stranded; the coordinator is taking over',
+};
+const MATCH_TONE = { sending: 'info', matched: 'info', waiting: 'warn', delivered: 'ok', expired: 'bad' };
+
+function MatchDetail({ s, b, clockLive, className }) {
+  const m = matchStatus(s, b, { clockLive });
+  const u = RULES[b.category].unit;
+  return (
+    <div className={cn('flex flex-col gap-1.5 font-prose text-[13px] text-foreground/85', className)}>
+      {m.splits.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {m.splits.map((x) => (
+            <li key={x.taskId} className="flex flex-wrap items-baseline gap-x-1.5">
+              <b className="font-sans font-semibold">{x.rider}</b>
+              <span className="text-muted-foreground">({x.vehicle})</span>
+              <span>· {x.phase === 'done' ? x.delivered : x.qty} {u} → <b className="font-sans font-semibold">{x.shelter}</b></span>
+              {x.live && <span className="font-mono text-xs font-semibold tabular">· ETA {x.etaMs ? ist(x.etaMs) : `${Math.max(1, Math.round(x.etaMin))} min`}</span>}
+              <span className="text-xs text-muted-foreground">· {SPLIT_PHASE[x.phase]}</span>
+              {x.rerouted && <span className="w-full text-xs text-warn">Rerouted from {x.rerouted.from}: {x.rerouted.reason}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {m.waitReason && <p className="text-warn">{m.waitReason}</p>}
+      {m.key === 'expired' && <p className="text-bad">{m.expiredQty} {u} expired unclaimed: the safe time ran out before a rider could take it anywhere safely. It was never handed over.</p>}
+      {m.blocked.length > 0 && (
+        <ul className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+          {m.blocked.map((x) => <li key={x.site}>{x.reason}</li>)}
+        </ul>
+      )}
+      {m.paused && <p className="text-xs font-semibold text-warn">Matching runs when the live clock is running.</p>}
+    </div>
+  );
+}
+
+// After posting: the live result for the batches this post created, read from shared state.
+function PostResult({ s, postId, count, pickup, onAgain }) {
+  const clockLive = useClockLive(s);
+  const batches = s.batches.filter((b) => b.postId === postId);
+  const statuses = batches.map((b) => matchStatus(s, b, { clockLive }));
+  const live = statuses.flatMap((m) => m.splits.filter((x) => x.live));
+  const routes = [...new Map(live.map((x) => [x.shelterId, { id: x.shelterId, name: x.shelter, to: toLatLng(site(s, x.shelterId)) }])).values()];
+  const riders = [...new Map(live.map((x) => {
+    const r = s.riders.find((y) => y.id === x.riderId);
+    return [r.id, { id: r.id, name: r.name, at: toLatLng(r) }];
+  })).values()];
+  const searching = statuses.some((m) => m.searching) && !live.length;
+  const plural = riders.length === 1 ? 'rider' : 'riders';
+  let status = null;
+  if (batches.length < count) status = 'Sending to the dispatcher…';
+  else if (statuses.some((m) => m.paused)) status = 'Matching runs when the live clock is running';
+  else if (live.length) status = `Matched: ${riders.length} ${plural} → ${routes.map((r) => r.name).join(', ')}`;
+  else if (searching) status = 'Waiting for a match';
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <ul className="flex flex-col divide-y rounded-lg border bg-muted/30 text-sm">
+          {batches.length < count && <li className="p-4 text-muted-foreground">Sending your post to the dispatcher…</li>}
+          {batches.map((b, i) => {
+            const r = RULES[b.category];
+            return (
+              <li key={b.id} className="flex flex-col gap-1.5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <b className="font-semibold">{b.qty} {r.unit} · {r.label}</b>
+                  <Tone level={MATCH_TONE[statuses[i].key]}>{statuses[i].label}</Tone>
+                </div>
+                <MatchDetail s={s} b={b} clockLive={clockLive} />
+              </li>
+            );
+          })}
+        </ul>
+        <PickupPreview point={pickup} routes={routes} riders={riders} searching={searching} status={status} />
+      </div>
+      <div className="flex flex-wrap justify-end gap-2 border-t pt-5">
+        <Button type="button" variant="outline" onClick={onAgain}><Plus /> Post more food</Button>
+        <Button asChild><a href="#/donor/donations">See my donations <ArrowRight /></a></Button>
+      </div>
     </div>
   );
 }
@@ -185,7 +273,7 @@ const minutesOf = (item) => Number(item.safe.value) * UNITS[item.safe.unit];
 
 // A donor often has several kinds of surplus at once (meals + bread + milk). Each selected food type
 // keeps its own quantity and safe time and becomes its own batch, so each is routed by its own tier.
-function PostFlow({ me, ctx }) {
+function PostFlow({ s, me, ctx }) {
   const first = Object.keys(RULES)[0];
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState([first]);
@@ -194,6 +282,7 @@ function PostFlow({ me, ctx }) {
   const [photo, setPhoto] = useState('');
   const [photoUrl, setPhotoUrl] = useState(''); // local preview only; the batch keeps just the file name
   const [pickup, setPickup] = useState(DEFAULT_PICKUP);
+  const [posted, setPosted] = useState(null); // { postId, count, pickup } once sent
   useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
 
   const attach = (file) => {
@@ -221,13 +310,32 @@ function PostFlow({ me, ctx }) {
     if (step === 3 && !inServiceArea(pickup)) { notify(OUT_OF_AREA, 'bad'); return; }
     if (step < LAST) { setStep(step + 1); return; }
     const where = { lat: pickup.lat, lng: pickup.lng, label: pickup.label.trim() || undefined, contact: pickup.contact.trim() || undefined };
+    // Tags this post's batches so the result below can find them, whichever tab applies the action.
+    const postId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
     for (const k of selected) {
-      ctx.act({ type: 'addBatch', donorId: me.entityId, category: k, qty: Math.round(Number(items[k].qty)), shelfMin: minutesOf(items[k]), notes: notes.trim() || undefined, photo: photo || undefined, pickup: where });
+      ctx.act({ type: 'addBatch', donorId: me.entityId, category: k, qty: Math.round(Number(items[k].qty)), shelfMin: minutesOf(items[k]), notes: notes.trim() || undefined, photo: photo || undefined, pickup: where, postId });
     }
     const summary = selected.map((k) => `${Math.round(Number(items[k].qty))} ${RULES[k].unit} of ${RULES[k].label.toLowerCase()}`).join(', ');
-    notify(`Posted ${summary}. Dispatching riders now.`);
-    ctx.go('#/donor/donations');
+    notify(`Posted ${summary}.`);
+    setPosted({ postId, count: selected.length, pickup: { ...pickup } });
   };
+
+  const again = () => {
+    setPosted(null);
+    setStep(1);
+    setNotes('');
+    attach(null);
+  };
+
+  if (posted) {
+    return (
+      <Card className="py-6">
+        <CardContent className="px-5 sm:px-6">
+          <PostResult s={s} postId={posted.postId} count={posted.count} pickup={posted.pickup} onAgain={again} />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="py-6">
