@@ -1,4 +1,5 @@
 // NEXUS dispatch engine — pure logic, no DOM. Time unit: simulated minutes. Distance unit: km.
+import { inGrid, toGrid } from './geo.js';
 
 // Perishability tiers decide where food may go:
 // TIGHT -> only confirmed, verified sites reachable in time (stations as last resort).
@@ -58,6 +59,15 @@ export const roadKm = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) * CONFIG.roadFa
 export const speedOf = (r) => r.speed * (r.traffic ? CONFIG.trafficFactor : 1) * (r.speedMul ?? 1);
 export const travelMin = (a, b, kmh) => (roadKm(a, b) / kmh) * 60;
 
+// Where a batch is collected: the pin the donor chose when posting, else the donor's fixed spot
+// (seeded scenario batches). Every pickup ETA, movement and label goes through this.
+export function pickupOf(s, b) {
+  const donor = byId(s.donors, b.donorId);
+  const p = b.pickup;
+  if (p && p.x != null) return { x: p.x, y: p.y, name: p.label || `${donor.name} pickup pin`, custom: true };
+  return donor;
+}
+
 export function createState(scenario) {
   const s = structuredClone(scenario);
   s.now = 0;
@@ -100,7 +110,9 @@ function initBatch(s, b) {
   b.blockedNoted = false;
   b.delivered = 0;
   b.deliveredTo = {};
-  log(s, 'info', `New batch: ${b.qty} ${RULES[b.category].unit} of ${RULES[b.category].label.toLowerCase()} at ${byId(s.donors, b.donorId).name}, safe for ${Math.round(b.expiresAt - s.now)} min.`);
+  b.blocked = [];
+  b.waitReason = null;
+  log(s, 'info', `New batch: ${b.qty} ${RULES[b.category].unit} of ${RULES[b.category].label.toLowerCase()} at ${pickupOf(s, b).name}, safe for ${Math.round(b.expiresAt - s.now)} min.`, { batch: b.id });
 }
 
 // meta (optional) tags an entry for the alerts rail: { kind, rider, site, batch }.
@@ -202,7 +214,7 @@ export function dispatch(s) {
 
   const fair = {};
   for (const b of batches) {
-    const donor = byId(s.donors, b.donorId);
+    const pickup = pickupOf(s, b);
     noteBlockedShelters(s, b);
     if (!(b.category in fair)) fair[b.category] = shareCaps(s, b.category);
     const share = fair[b.category];
@@ -215,14 +227,14 @@ export function dispatch(s) {
         for (const c of candidateRiders(s, b)) {
           const { r, from, freeAt, queued } = c;
           const kmh = speedOf(r);
-          const tPick = travelMin(from, donor, kmh);
+          const tPick = travelMin(from, pickup, kmh);
           for (const sh of sites(s)) {
             if (!canReceive(s, sh, b.category)) continue;
             if (capped && sh.kind === 'station') continue;
             let room = unmet(s, sh, b.category);
             if (capped) room = Math.min(room, share.caps[sh.id] ?? 0);
             if (room <= 0) continue;
-            const arrive = freeAt + tPick + CONFIG.handlingMin + travelMin(donor, sh, kmh);
+            const arrive = freeAt + tPick + CONFIG.handlingMin + travelMin(pickup, sh, kmh);
             const slack = b.expiresAt - CONFIG.safetyBufferMin - arrive;
             if (slack < 0) continue;
             const qty = Math.min(b.remaining, r.capacity, room);
@@ -243,7 +255,8 @@ export function dispatch(s) {
 
     if (b.remaining > 0 && !b.warned) {
       b.warned = true;
-      log(s, 'warn', `${b.remaining} ${RULES[b.category].unit} at ${donor.name} have no safe route yet (no free rider or receiving site can make it before spoilage). Waiting for capacity.`);
+      b.waitReason = `${b.remaining} ${RULES[b.category].unit} at ${pickup.name} have no safe route yet (no free rider or receiving site can make it before spoilage). Waiting for capacity.`;
+      log(s, 'warn', b.waitReason, { kind: 'noRoute', batch: b.id });
     }
   }
 }
@@ -277,7 +290,9 @@ function noteBlockedShelters(s, b) {
   for (const sh of s.shelters) {
     const missing = missingFacilities(sh, b.category);
     if (sh.open && (sh.need[b.category] || 0) > 0 && missing.length) {
-      log(s, 'block', `Blocked: ${RULES[b.category].label.toLowerCase()} will not go to ${sh.name}; it has no ${missing.map((f) => FACILITY_LABEL[f]).join(' or ')}.`);
+      const reason = `Blocked: ${RULES[b.category].label.toLowerCase()} will not go to ${sh.name}; it has no ${missing.map((f) => FACILITY_LABEL[f]).join(' or ')}.`;
+      (b.blocked ??= []).push({ site: sh.id, name: sh.name, reason });
+      log(s, 'block', reason, { site: sh.id, batch: b.id });
     }
   }
 }
@@ -291,12 +306,12 @@ function assign(s, b, { r, sh, qty, arrive, slack, queued }) {
   s.tasks.push(t);
   b.remaining -= qty;
   b.warned = false;
+  b.waitReason = null;
   if (b.remaining === 0) b.status = 'allocated';
   if (queued) r.nextTaskId = t.id;
   else { r.status = 'busy'; r.taskId = t.id; }
   r.lastPing = s.now;
-  const donor = byId(s.donors, b.donorId);
-  log(s, 'assign', `${r.name} ${queued ? 'pre-booked (after current drop-off)' : 'claimed'} ${qty} ${RULES[b.category].unit}: ${donor.name} → ${sh.name}. ETA ${Math.round(arrive - s.now)} min, ${Math.round(slack)} min to spare. Must stay reachable (silence limit ${holdMin.toFixed(1)} min).`, { rider: r.id, site: sh.id, batch: b.id });
+  log(s, 'assign', `${r.name} ${queued ? 'pre-booked (after current drop-off)' : 'claimed'} ${qty} ${RULES[b.category].unit}: ${pickupOf(s, b).name} → ${sh.name}. ETA ${Math.round(arrive - s.now)} min, ${Math.round(slack)} min to spare. Must stay reachable (silence limit ${holdMin.toFixed(1)} min).`, { rider: r.id, site: sh.id, batch: b.id });
 }
 
 // ---------- Recovery ----------
@@ -425,7 +440,7 @@ export function tick(s, dt) {
   for (const t of activeTasks(s)) {
     const r = byId(s.riders, t.riderId);
     const b = byId(s.batches, t.batchId);
-    const donor = byId(s.donors, b.donorId);
+    const pickup = pickupOf(s, b);
     const sh = site(s, t.shelterId);
 
     // 1. Expiry while carrying (applies even if the rider is silent)
@@ -451,7 +466,7 @@ export function tick(s, dt) {
     // 3. Spoilage forecast (e.g. traffic): release pickups that can no longer make it
     const kmh = speedOf(r);
     if (t.phase === 'to_pickup') {
-      const projected = s.now + travelMin(r, donor, kmh) + CONFIG.handlingMin + travelMin(donor, sh, kmh);
+      const projected = s.now + travelMin(r, pickup, kmh) + CONFIG.handlingMin + travelMin(pickup, sh, kmh);
       if (projected > b.expiresAt - CONFIG.safetyBufferMin) {
         releaseToPool(s, t, `projected arrival ${Math.round(projected - s.now)} min is too late for the food`);
         continue;
@@ -463,10 +478,10 @@ export function tick(s, dt) {
 
     // 4. Movement
     if (t.phase === 'loading') {
-      if (s.now >= t.loadUntil) { t.phase = 'to_dropoff'; log(s, 'move', `${r.name} picked up ${t.qty} ${RULES[t.category].unit} from ${donor.name}.`); }
+      if (s.now >= t.loadUntil) { t.phase = 'to_dropoff'; log(s, 'move', `${r.name} picked up ${t.qty} ${RULES[t.category].unit} from ${pickup.name}.`, { rider: r.id, batch: b.id }); }
       continue;
     }
-    const target = t.phase === 'to_pickup' ? donor : site(s, t.shelterId);
+    const target = t.phase === 'to_pickup' ? pickup : site(s, t.shelterId);
     const step = (kmh * dt) / 60 / CONFIG.roadFactor;
     const d = Math.hypot(target.x - r.x, target.y - r.y);
     if (d <= step) {
@@ -483,7 +498,7 @@ export function tick(s, dt) {
   for (const b of s.batches) {
     if (b.status !== 'expired' && s.now >= b.expiresAt && b.remaining > 0) {
       s.metrics.wasted += b.remaining;
-      log(s, 'critical', `${b.remaining} ${RULES[b.category].unit} expired unclaimed at ${byId(s.donors, b.donorId).name}.`, { kind: 'expired', batch: b.id });
+      log(s, 'critical', `${b.remaining} ${RULES[b.category].unit} expired unclaimed at ${pickupOf(s, b).name}.`, { kind: 'expired', batch: b.id });
       b.remaining = 0;
       b.status = 'expired';
     }
@@ -528,8 +543,18 @@ function arrive(s, t) {
 }
 
 // ---------- Operator / field events ----------
-export function addBatch(s, { donorId, category, qty, shelfMin, notes, photo, pickup }) {
-  const b = { id: `B${s.seq++}`, donorId, category, qty, expiresAt: s.now + (shelfMin ?? RULES[category].safeMin), notes, photo, pickup };
+// pickup (optional): the donor's chosen pin { lat, lng, label, contact }. Its grid position is stored on
+// the batch so riders are sent there. Pins outside the grid are refused, never clamped: the donor UI
+// blocks them first, and this guard stops any other caller from silently sending riders to an edge.
+// postId (optional): lets the posting tab find the batches it created, whichever tab applies the action.
+export function addBatch(s, { donorId, category, qty, shelfMin, notes, photo, pickup, postId }) {
+  let where;
+  if (pickup && pickup.lat != null) {
+    const g = toGrid(pickup);
+    if (!inGrid(g)) throw new Error(`Pickup pin ${pickup.lat}, ${pickup.lng} is outside the service area`);
+    where = { ...pickup, x: g.x, y: g.y };
+  }
+  const b = { id: `B${s.seq++}`, donorId, category, qty, expiresAt: s.now + (shelfMin ?? RULES[category].safeMin), notes, photo, pickup: where, postId };
   s.batches.push(b);
   initBatch(s, b);
   dispatch(s);
@@ -650,9 +675,9 @@ export function nearestStation(s, from) {
 
 // Minutes until no rider could still get this food anywhere safely (its point of no return).
 export function minutesToNoReturn(s, b) {
-  const donor = byId(s.donors, b.donorId);
+  const pickup = pickupOf(s, b);
   const fastest = Math.max(...s.riders.map(speedOf));
-  const hops = sites(s).filter((sh) => canReceive(s, sh, b.category)).map((sh) => travelMin(donor, sh, fastest));
+  const hops = sites(s).filter((sh) => canReceive(s, sh, b.category)).map((sh) => travelMin(pickup, sh, fastest));
   if (!hops.length) return 0;
   return b.expiresAt - CONFIG.safetyBufferMin - CONFIG.handlingMin - Math.min(...hops) - s.now;
 }

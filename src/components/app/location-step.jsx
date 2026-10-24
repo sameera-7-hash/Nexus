@@ -11,9 +11,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Callout } from '@/components/app/bits';
 import { cn } from '@/lib/utils';
+import { GRID_KM, inGrid, toGrid } from '@/geo.js';
 
 // Pune city centre, same default as the Nexus prototype.
 export const DEFAULT_PICKUP = { lat: 18.5204, lng: 73.8567, label: '', contact: '' };
+
+// Riders only cover the 10 km x 10 km service grid around the city centre; a pin outside it is refused.
+export const inServiceArea = (point) => inGrid(toGrid(point));
+export const OUT_OF_AREA = `This pin is outside the ${GRID_KM} km × ${GRID_KM} km area our riders cover around Pune city centre. Move it inside the area to post.`;
 
 const pin = L.divIcon({ className: 'nexus-marker', html: '<span>📍</span>', iconSize: [34, 34], iconAnchor: [17, 17] });
 const round = (n) => Number(n.toFixed(6));
@@ -89,6 +94,7 @@ export function LocationStep({ value, onChange }) {
         </div>
         <Button type="button" variant="outline" onClick={useGPS}><LocateFixed /> Use my current GPS location</Button>
         {msg && <Callout tone={msg[0]} icon={msg[0] === 'ok' ? 'check' : 'map'}>{msg[1]}</Callout>}
+        {!inServiceArea(value) && <Callout tone="bad" icon="alert" title="Outside the delivery area">{OUT_OF_AREA}</Callout>}
         <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3.5">
           <MapPin className="size-5 shrink-0 text-primary" />
           <div className="min-w-0 text-sm">

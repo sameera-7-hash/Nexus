@@ -138,10 +138,10 @@ function Timeline({ s, sh }) {
   if (!inc.length) return <Empty icon="bike" title="No riders on the way">When a donor posts food that fits your needs, the rider and ETA appear here instantly.</Empty>;
   return (
     <ol className="flex flex-col">
-      {inc.map(({ t, rider, batch, donor }) => {
+      {inc.map(({ t, rider, batch, pickup }) => {
         const left = batch.expiresAt - s.now;
         const lvl = safety(left, batchTotal(batch)).level;
-        const phase = t.phase === 'to_pickup' || t.phase === 'queued' ? `Heading to ${donor.name} to collect` : t.phase === 'loading' ? `Loading at ${donor.name}` : 'Carrying it to you';
+        const phase = t.phase === 'to_pickup' || t.phase === 'queued' ? `Heading to ${pickup.name} to collect` : t.phase === 'loading' ? `Loading at ${pickup.name}` : 'Carrying it to you';
         const node = t.rerouted ? 'border-warn' : isCarrying(t) ? 'border-primary' : 'border-rider';
         return (
           <li key={t.id} className="relative pb-5 pl-8 before:absolute before:top-5 before:bottom-0 before:left-[8px] before:w-0.5 before:bg-border last:pb-0 last:before:hidden">

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bike, House, Package, Pause, Play, Plus, RotateCcw, ShieldCheck, Truck, Zap } from 'lucide-react';
+import { Bike, House, MapPin, Package, Pause, Play, Plus, RotateCcw, ShieldCheck, Truck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import { Icon } from '@/lib/icons';
 import { notify } from '@/lib/notify';
 import { CARD_TONE, TONE } from '@/lib/tone';
 import { cn } from '@/lib/utils';
-import { RULES, TIERS, FACILITY_LABEL, VEHICLES, activeTasks, isCarrying, site, perPerson, minutesToNoReturn } from '@/engine.js';
+import { RULES, TIERS, FACILITY_LABEL, VEHICLES, activeTasks, isCarrying, pickupOf, site, perPerson, minutesToNoReturn } from '@/engine.js';
 import { byId, fmt, clock, ago, ist, istShort } from '@/ui/kit.js';
 import { useInterval } from '@/hooks/use-sim';
 import { batchStatus, batchTotal, checkInState, impact } from '@/ui/derive.js';
@@ -241,6 +241,7 @@ function Legend() {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground max-sm:hidden">
       <span><i className={cn(glyph, 'rounded-[4px] bg-donor')}><Package /></i>Donor</span>
+      <span><i className={cn(glyph, 'rounded-[50%_50%_50%_0] -rotate-45 bg-donor [&>svg]:rotate-45')}><MapPin /></i>Pickup pin</span>
       <span><i className={cn(glyph, 'bg-shelter')}><House /></i>Shelter / camp</span>
       <span><i className={cn(dot, 'rotate-45 rounded-[2px] bg-station')} />Food station</span>
       <span><i className={cn(dot, 'rounded-full border-2 border-dashed border-shelter')} />Unverified</span>
@@ -253,7 +254,7 @@ function Legend() {
 function jobLine(s, r) {
   const t = r.taskId && byId(s.tasks, r.taskId);
   if (!t) return r.status === 'unresponsive' ? 'Silent: excluded from dispatch' : r.standby ? 'Rescue reserve: takes over failed claims' : 'Waiting for a job';
-  const d = byId(s.donors, byId(s.batches, t.batchId).donorId);
+  const d = pickupOf(s, byId(s.batches, t.batchId));
   const sh = site(s, t.shelterId);
   const u = RULES[t.category].unit;
   if (t.phase === 'to_pickup') return `Heading to ${d.name} for ${t.qty} ${u} → ${sh.name}`;
@@ -328,7 +329,7 @@ function Phone({ s, ctx, id }) {
   if (!r) return null;
   const t = r.taskId && byId(s.tasks, r.taskId);
   const b = t && byId(s.batches, t.batchId);
-  const d = b && byId(s.donors, b.donorId);
+  const d = b && pickupOf(s, b);
   const sh = t && site(s, t.shelterId);
   const silence = s.now - r.lastPing;
   const atPickup = t && (t.phase === 'to_pickup' || t.phase === 'queued');

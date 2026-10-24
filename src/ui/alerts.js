@@ -1,5 +1,5 @@
 // Coordinator alerts rail + one-click judge scenarios. Pure functions over engine state.
-import { RULES, activeTasks, isCarrying, minutesToNoReturn, site } from '../engine.js';
+import { RULES, activeTasks, isCarrying, minutesToNoReturn, pickupOf, site } from '../engine.js';
 import { ago } from './kit.js';
 
 const byId = (list, id) => list.find((x) => x.id === id);
@@ -19,7 +19,7 @@ export function alerts(s) {
   for (const b of s.batches) {
     if (b.status !== 'available' || b.remaining <= 0) continue;
     const ponr = minutesToNoReturn(s, b);
-    if (ponr < 15) out.push({ level: 'bad', icon: 'alert', title: ponr <= 0 ? `${b.remaining} ${RULES[b.category].unit} can no longer be delivered safely` : `${b.remaining} ${RULES[b.category].unit} near point of no return`, text: ponr <= 0 ? `${byId(s.donors, b.donorId).name}: flagged and held back. Unsafe food never goes out.` : `${Math.round(ponr)} min left to get a rider to ${byId(s.donors, b.donorId).name}.`, sec: 'batches', id: b.id });
+    if (ponr < 15) out.push({ level: 'bad', icon: 'alert', title: ponr <= 0 ? `${b.remaining} ${RULES[b.category].unit} can no longer be delivered safely` : `${b.remaining} ${RULES[b.category].unit} near point of no return`, text: ponr <= 0 ? `${pickupOf(s, b).name}: flagged and held back. Unsafe food never goes out.` : `${Math.round(ponr)} min left to get a rider to ${pickupOf(s, b).name}.`, sec: 'batches', id: b.id });
   }
   const seen = new Set();
   for (const l of s.log) {

@@ -1,5 +1,5 @@
 // Read-only selectors that turn engine state into what people need to see. No DOM.
-import { RULES, CONFIG, activeTasks, isCarrying, site, roadKm } from '../engine.js';
+import { RULES, CONFIG, activeTasks, isCarrying, pickupOf, site, roadKm } from '../engine.js';
 
 const byId = (list, id) => list.find((x) => x.id === id);
 const ACTIVE = new Set(['queued', 'to_pickup', 'loading', 'to_dropoff']);
@@ -35,7 +35,7 @@ export const batchTotal = (b) => Math.max(1, b.expiresAt - (b.postedAt ?? 0));
 // Everything heading to a site, soonest first.
 export function incomingTo(s, siteId) {
   return activeTasks(s).filter((t) => t.shelterId === siteId).sort((a, b) => a.eta - b.eta).map((t) => ({
-    t, rider: byId(s.riders, t.riderId), batch: byId(s.batches, t.batchId), donor: byId(s.donors, byId(s.batches, t.batchId).donorId),
+    t, rider: byId(s.riders, t.riderId), batch: byId(s.batches, t.batchId), pickup: pickupOf(s, byId(s.batches, t.batchId)),
   }));
 }
 

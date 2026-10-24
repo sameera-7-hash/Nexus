@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Callout, Empty, KV, PageHeader, Ring, Section, StatusDisc, TIER_TONE, Tone } from '@/components/app/bits';
 import { Pattern } from '@/components/app/art';
-import { DEFAULT_PICKUP, LocationStep, PickupPreview } from '@/components/app/location-step';
+import { DEFAULT_PICKUP, LocationStep, OUT_OF_AREA, PickupPreview, inServiceArea } from '@/components/app/location-step';
 import { Icon } from '@/lib/icons';
 import { CARD_TONE } from '@/lib/tone';
 import { notify } from '@/lib/notify';
@@ -218,6 +218,7 @@ function PostFlow({ me, ctx }) {
         if (!(minutesOf(items[k]) >= 1)) { notify(`Enter how long the ${RULES[k].label.toLowerCase()} stays safe.`, 'bad'); document.getElementById(`safe-${k}`)?.focus(); return; }
       }
     }
+    if (step === 3 && !inServiceArea(pickup)) { notify(OUT_OF_AREA, 'bad'); return; }
     if (step < LAST) { setStep(step + 1); return; }
     const where = { lat: pickup.lat, lng: pickup.lng, label: pickup.label.trim() || undefined, contact: pickup.contact.trim() || undefined };
     for (const k of selected) {
